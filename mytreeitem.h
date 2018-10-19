@@ -38,6 +38,7 @@ public:
 
 private:
 
+    const int SIZE = 2;
     QList<TreeItem*> childItems;
 
     QVector<QVariant> itemData;

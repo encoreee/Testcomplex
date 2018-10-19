@@ -57,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
     connect(menuFile, &QMenu::aboutToShow, this, &MainWindow::updateActions);
     connect(actionNew_test, &QAction::triggered, this, &MainWindow::insertRow);
+    connect(actionAdd_to_test, &QAction::triggered, this, &MainWindow::insertChild);
+    connect(actionRemove, &QAction::triggered, this, &MainWindow::removeRow);
     connect(actionDelete_workspace, &QAction::triggered, this, &MainWindow::removeRow);
     connect(actionAdd_existing_file, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionRead_log, &QAction::triggered, this, &MainWindow::readLogFile);
@@ -141,7 +143,8 @@ void MainWindow::insertRow()
 
     updateActions();
 
-    for (int column = 0; column < model->columnCount(index.parent()); ++column) {
+    for (int column = 0; column < model->columnCount(index.parent()); ++column)
+    {
         QModelIndex child = model->index(index.row()+1, column, index.parent());
         model->setData(child, QVariant("[No data]"), Qt::EditRole);
     }
@@ -187,7 +190,7 @@ void MainWindow::updateActions()
 
         int row = workSpace->selectionModel()->currentIndex().row();
 
-//        int column = workSpace->selectionModel()->currentIndex().column();
+//        int column = workSpace->selectionModel()->currentIndex().column()
 
         if (workSpace->selectionModel()->currentIndex().parent().isValid())
         {
