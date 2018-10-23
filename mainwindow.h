@@ -74,6 +74,8 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void makeTest();
         void collectdata(const QByteArray &data);
         void printData(const QByteArray &data);
+        void cancelSelection();
+        bool eventFilter(QObject *object, QEvent *event);
 
 };
 

@@ -51,15 +51,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     workSpace->setModel(model);
 
     for (int column = 0; column < model->columnCount(); ++column)
+    {
         workSpace->resizeColumnToContents(column);
+    }
+    workSpace->installEventFilter(this);
 
     connect(actionExit, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
-    connect(menuFile, &QMenu::aboutToShow, this, &MainWindow::updateActions);
+ //   connect(menuFile, &QMenu::aboutToShow, this, &MainWindow::updateActions);
     connect(actionNew_test, &QAction::triggered, this, &MainWindow::insertRow);
     connect(actionAdd_to_test, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionRemove, &QAction::triggered, this, &MainWindow::removeRow);
-    connect(actionDelete_workspace, &QAction::triggered, this, &MainWindow::removeRow);
     connect(actionAdd_existing_file, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionRead_log, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionClean_logspace, &QAction::triggered, this, &MainWindow::cleanLogSpace);
@@ -75,7 +77,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     initPortActionsConnections();
 
-//    connect(actionN, &QAction::triggered, this, &MainWindow::insertChild);
 //    connect(removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn); // Позже допилить
 //    connect(insertColumnAction, &QAction::triggered, this, &MainWindow::insertColumn); // Позже допилить
 
@@ -106,7 +107,8 @@ void MainWindow::insertChild()
     if (!model->insertRow(0, index))
         return;
 
-    for (int column = 0; column < model->columnCount(index); ++column) {
+    for (int column = 0; column < model->columnCount(index); ++column)
+    {
         QModelIndex child = model->index(0, column, index);
         model->setData(child, QVariant("[No data]"), Qt::EditRole);
         if (!model->headerData(column, Qt::Horizontal).isValid())
@@ -115,6 +117,7 @@ void MainWindow::insertChild()
 
     workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
 
+    cancelSelection();
     updateActions();
 }
 
@@ -141,13 +144,43 @@ void MainWindow::insertRow()
     if (!model->insertRow(index.row()+1, index.parent()))
         return;
 
-    updateActions();
-
     for (int column = 0; column < model->columnCount(index.parent()); ++column)
     {
         QModelIndex child = model->index(index.row()+1, column, index.parent());
         model->setData(child, QVariant("[No data]"), Qt::EditRole);
+
     }
+
+    cancelSelection();
+
+   updateActions();
+
+
+}
+
+bool MainWindow::eventFilter(QObject *object, QEvent *event)
+{
+    if (object == workSpace && event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key() == Qt::Key_Escape)
+        {
+        cancelSelection();
+        updateActions();
+        return true;
+        }
+        else
+
+        return false;
+    }
+    return false;
+}
+
+void MainWindow::cancelSelection()
+{
+    QItemSelection selection = workSpace->selectionModel()->selection();
+    workSpace->selectionModel()->select(selection, QItemSelectionModel::Clear);
+    workSpace->selectionModel()->reset();
 }
 
 bool MainWindow::removeColumn()
@@ -174,23 +207,25 @@ void MainWindow::removeRow()
 
 void MainWindow::updateActions()
 {
-    bool hasSelection = !workSpace->selectionModel()->selection().isEmpty();
-
-    actionDelete_workspace->setEnabled(hasSelection);
-
-//    removeColumnAction->setEnabled(hasSelection);
-
     bool hasCurrent = workSpace->selectionModel()->currentIndex().isValid();
-    actionOpen_workspace->setEnabled(hasCurrent);
-//    insertColumnAction->setEnabled(hasCurrent);
 
     if (hasCurrent)
     {
+        if (!workSpace->selectionModel()->currentIndex().parent().isValid())
+        {
+        actionAdd_to_test->setEnabled(true);
+        actionNew_test->setDisabled(true);
+        }
+        if (workSpace->selectionModel()->currentIndex().parent().isValid())
+        {
+        actionAdd_to_test->setDisabled(true);
+        }
+
         workSpace->closePersistentEditor(workSpace->selectionModel()->currentIndex());
 
         int row = workSpace->selectionModel()->currentIndex().row();
 
-//        int column = workSpace->selectionModel()->currentIndex().column()
+        int column = workSpace->selectionModel()->currentIndex().column();
 
         if (workSpace->selectionModel()->currentIndex().parent().isValid())
         {
@@ -201,6 +236,12 @@ void MainWindow::updateActions()
           QMainWindow::statusBar()->showMessage(tr("Position: Test(%1) ").arg(row));
         }
     }
+    else
+    {
+        actionNew_test->setEnabled(true);
+        actionAdd_to_test->setDisabled(true);
+    }
+
 }
 
 void MainWindow::readLogFile()
@@ -271,6 +312,7 @@ void MainWindow::readLogFile()
         logSpace->append(nowDate);
         logSpace->append(nowTime);
         logSpace->append("\n");
+
 
         test.m_logData.push_back(tempList);
         test.m_directory.push_back(PathName);

@@ -1,5 +1,5 @@
 #include "mytreeitem.h"
-
+#include <QDebug>
 #include <QStringList>
 
 
@@ -47,7 +47,8 @@ bool TreeItem::insertChildren(int position, int count, int columns)
     if (position < 0 || position > childItems.size())
         return false;
 
-    for (int row = 0; row < count; ++row) {
+    for (int row = 0; row < count; ++row)
+    {
         QVector<QVariant> data(columns);
         TreeItem *item = new TreeItem(data, this);
         childItems.insert(position, item);
@@ -108,3 +109,14 @@ bool TreeItem::setData(int column, const QVariant &value)
     itemData[column] = value;
     return true;
 }
+
+bool TreeItem::setTestData(const Test &temptest)
+{
+    if(temptest.m_logData.first().isEmpty())
+        qDebug() << "Temp list is empty";
+        return false;
+
+    test = temptest;
+    return true;
+}
+

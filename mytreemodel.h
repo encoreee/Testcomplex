@@ -4,6 +4,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include "test.h"
 
 class TreeItem;
 
@@ -20,7 +21,6 @@ public:
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
 
     QModelIndex parent(const QModelIndex &index) const override;
@@ -33,6 +33,8 @@ public:
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
+    bool setTestData(const QModelIndex &index, const Test temptest, int role);
+
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
 
     bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex()) override;
@@ -42,6 +44,10 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
 
     bool removeRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
+
+    int childCount(const QModelIndex &index, int role) const;
+
+
 
 private:
 

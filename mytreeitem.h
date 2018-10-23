@@ -36,16 +36,19 @@ public:
 
     bool setData(int column, const QVariant &value);
 
+    bool setTestData(const Test &temptest);
+
+
 private:
 
-    const int SIZE = 2;
+
     QList<TreeItem*> childItems;
 
     QVector<QVariant> itemData;
 
     TreeItem *parentItem;
 
-    Test *mytest;
+    Test test;
 
 };
 //! [0]
