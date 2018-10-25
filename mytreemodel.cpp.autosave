@@ -181,7 +181,7 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
     return result;
 }
 
-bool TreeModel::setTestData(const QModelIndex &index, const Test temptest, int role)
+bool TreeModel::setTestData(const QModelIndex &index, const Test temptest, int role) 
 {
     if (role != Qt::EditRole)
         return false;

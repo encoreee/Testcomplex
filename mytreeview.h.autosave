@@ -1,0 +1,21 @@
+#ifndef MYTREEVIEW_H
+#define MYTREEVIEW_H
+
+#include <QObject>
+#include <QTreeView>
+#include "test.h"
+
+class MyTreeView : public QTreeView
+{
+        Q_OBJECT
+    public:
+        explicit MyTreeView(QWidget *parent = nullptr);
+
+        virtual bool setTestData(const QModelIndex &index, const Test temptest, int role);
+        
+    signals:
+
+    public slots:
+};
+
+#endif // MYTREEVIEW_H

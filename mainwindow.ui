@@ -36,7 +36,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QTreeView" name="workSpace"/>
+      <widget class="MyTreeView" name="workSpace"/>
       <widget class="QSplitter" name="horizontalSplitter">
        <property name="enabled">
         <bool>true</bool>
@@ -100,7 +100,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="font">
@@ -385,6 +385,11 @@ p, li { white-space: pre-wrap; }
    <class>CommandLine</class>
    <extends>QLineEdit</extends>
    <header>commandLine.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MyTreeView</class>
+   <extends>QTreeView</extends>
+   <header location="global">mytreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -20,7 +20,8 @@ SOURCES += \
         settingsdialog.cpp \
         commandLine.cpp \
         mytreeitem.cpp \
-        mytreemodel.cpp
+        mytreemodel.cpp \
+    mytreeview.cpp
 
 
 HEADERS += \
@@ -29,7 +30,8 @@ HEADERS += \
         settingsdialog.h \
         commandLine.h \
         mytreeitem.h \
-        mytreemodel.h
+        mytreemodel.h \
+    mytreeview.h
 
 
 FORMS += \

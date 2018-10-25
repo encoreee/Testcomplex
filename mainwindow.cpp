@@ -148,12 +148,10 @@ void MainWindow::insertRow()
     {
         QModelIndex child = model->index(index.row()+1, column, index.parent());
         model->setData(child, QVariant("[No data]"), Qt::EditRole);
-
     }
 
     cancelSelection();
-
-   updateActions();
+    updateActions();
 
 
 }
@@ -219,6 +217,11 @@ void MainWindow::updateActions()
         if (workSpace->selectionModel()->currentIndex().parent().isValid())
         {
         actionAdd_to_test->setDisabled(true);
+        actionNew_test->setDisabled(true);
+        }
+        if(workSpace->selectionModel()->currentIndex().column() != 0)
+        {
+           cancelSelection();
         }
 
         workSpace->closePersistentEditor(workSpace->selectionModel()->currentIndex());
@@ -229,11 +232,11 @@ void MainWindow::updateActions()
 
         if (workSpace->selectionModel()->currentIndex().parent().isValid())
         {
-          QMainWindow::statusBar()->showMessage(tr("Position: Log(%1)").arg(row));
+          QMainWindow::statusBar()->showMessage(tr("Position: Log(%1).(%2)").arg(row).arg(column));
         }
         else
         {
-          QMainWindow::statusBar()->showMessage(tr("Position: Test(%1) ").arg(row));
+          QMainWindow::statusBar()->showMessage(tr("Position: Test(%1).(%2)").arg(row).arg(column));
         }
     }
     else
@@ -579,6 +582,5 @@ void MainWindow::makeTest()
 
     QMainWindow::statusBar()->showMessage(tr("The test is finished"));
 }
-
 
 
