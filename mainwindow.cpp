@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
 
     QStringList headers;
-    headers << tr("Test name") << tr("Date");
+    headers << tr("Test name") << tr("Date") << tr("Time");
 
     QFile headersfile(":/default.txt");
     headersfile.open(QIODevice::ReadOnly);
@@ -50,10 +50,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     workSpace->setModel(model);
 
-    for (int column = 0; column < model->columnCount(); ++column)
-    {
-        workSpace->resizeColumnToContents(column);
-    }
+    resizeColumn();
+
     workSpace->installEventFilter(this);
 
     connect(actionExit, &QAction::triggered, qApp, &QCoreApplication::quit);
@@ -65,20 +63,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(actionAdd_existing_file, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionRead_log, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionClean_logspace, &QAction::triggered, this, &MainWindow::cleanLogSpace);
-    connect(actionMake_SNR_test, &QAction::triggered, this, &MainWindow::testTempFiles);
-    connect(actionSave_test_as, &QAction::triggered, this, &MainWindow::saveTestToFile);
+//    connect(actionMake_SNR_test, &QAction::triggered, this, &MainWindow::testTempFiles);
+//    connect(actionSave_test_as, &QAction::triggered, this, &MainWindow::saveTestToFile);
     connect(m_serial, &QSerialPort::readyRead, this, &MainWindow::readData);
     connect(commandLine, &CommandLine::getData, this, &MainWindow::writeData);
     connect(pushButton, &QPushButton::clicked, commandLine, &CommandLine::sendBybotton);
     connect(commandLine, &CommandLine::returnPressed, commandLine, &CommandLine::sendBybotton);
     connect(m_serial, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
-    connect(actionMaketest1,&QAction::triggered, this, &MainWindow::makeTest);
+//    connect(actionMaketest1,&QAction::triggered, this, &MainWindow::makeTest);
     connect(this, &MainWindow::haveData,this, &MainWindow::printData);
+    connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::BottomWrite);
+
 
     initPortActionsConnections();
 
 //    connect(removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn); // Позже допилить
-//    connect(insertColumnAction, &QAction::triggered, this, &MainWindow::insertColumn); // Позже допилить
+//    connect(actioninsertColumn, &QAction::triggered, this, &MainWindow::insertColumn); // Позже допилить
 
     updateActions();
 }
@@ -118,6 +118,7 @@ void MainWindow::insertChild()
     workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
 
     cancelSelection();
+    resizeColumn();
     updateActions();
 }
 
@@ -126,7 +127,6 @@ bool MainWindow::insertColumn()
     QAbstractItemModel *model = workSpace->model();
     int column = workSpace->selectionModel()->currentIndex().column();
 
-    // Insert a column in the parent item.
     bool changed = model->insertColumn(column + 1);
     if (changed)
         model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
@@ -150,7 +150,9 @@ void MainWindow::insertRow()
         model->setData(child, QVariant("[No data]"), Qt::EditRole);
     }
 
+
     cancelSelection();
+    resizeColumn();
     updateActions();
 
 
@@ -186,7 +188,6 @@ bool MainWindow::removeColumn()
     QAbstractItemModel *model = workSpace->model();
     int column = workSpace->selectionModel()->currentIndex().column();
 
-    // Insert columns in each child of the parent item.
     bool changed = model->removeColumn(column);
 
     if (changed)
@@ -316,96 +317,96 @@ void MainWindow::readLogFile()
         logSpace->append(nowTime);
         logSpace->append("\n");
 
-
-        test.m_logData.push_back(tempList);
-        test.m_directory.push_back(PathName);
-        test.m_fileName.push_back(logFileInfo.fileName());
-        test.m_readingDateTime.push_back(nowDateTime = QDateTime::currentDateTime());
+        test.setTestName("first test");
+        test.m_logData = tempList;
+        test.m_directory = PathName;
+        test.m_fileName = logFileInfo.fileName();
+        test.m_readingDateTime = nowDateTime = QDateTime::currentDateTime();
 
         QMessageBox::information(this,"Attention","File sucsesfuly read");
         QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
     }
 }
 
-void MainWindow::testTempFiles()
-{
-    qDebug() << test.m_logData.at(0).at(0);
-    qDebug() << test.m_directory.at(0);
-    qDebug() << test.m_fileName.at(0);
-    qDebug() << test.m_readingDateTime.at(0).time().toString("hh:mm:ss");
-    qDebug() << test.m_logData.at(1).at(0);
-    qDebug() << test.m_directory.at(1);
-    qDebug() << test.m_fileName.at(1);
-    qDebug() << test.m_readingDateTime.at(1).time().toString("hh:mm:ss");
-    qDebug() << test.m_logData.at(2).at(0);
-    qDebug() << test.m_directory.at(2);
-    qDebug() << test.m_fileName.at(2);
-    qDebug() << test.m_readingDateTime.at(2).time().toString("hh:mm:ss");
-}
+//void MainWindow::testTempFiles()
+//{
+//    qDebug() << test.m_logData.at(0).at(0);
+//    qDebug() << test.m_directory.at(0);
+//    qDebug() << test.m_fileName.at(0);
+//    qDebug() << test.m_readingDateTime.at(0).time().toString("hh:mm:ss");
+//    qDebug() << test.m_logData.at(1).at(0);
+//    qDebug() << test.m_directory.at(1);
+//    qDebug() << test.m_fileName.at(1);
+//    qDebug() << test.m_readingDateTime.at(1).time().toString("hh:mm:ss");
+//    qDebug() << test.m_logData.at(2).at(0);
+//    qDebug() << test.m_directory.at(2);
+//    qDebug() << test.m_fileName.at(2);
+//    qDebug() << test.m_readingDateTime.at(2).time().toString("hh:mm:ss");
+//}
 
-void MainWindow::saveTestToFile()
-{
-    QString PathName = QFileDialog::getSaveFileName(this, tr("Save WorkSpace"), "", tr("WorkSpace (*.wsp);;All Files (*)"));
+//void MainWindow::saveTestToFile()
+//{
+//    QString PathName = QFileDialog::getSaveFileName(this, tr("Save WorkSpace"), "", tr("WorkSpace (*.wsp);;All Files (*)"));
 
-    if(!PathName.isEmpty())
-    {
-        QFile workSpaceFile (PathName);
+//    if(!PathName.isEmpty())
+//    {
+//        QFile workSpaceFile (PathName);
 
-        workSpaceFile.open(QIODevice::WriteOnly | QIODevice::Text);
+//        workSpaceFile.open(QIODevice::WriteOnly | QIODevice::Text);
 
-            QByteArray tempArray;
-            QTextStream tempStream(&workSpaceFile);
-            QList<QString>::iterator tempFileNameIterator;
-            QList<QString>::iterator tempDirectoryIterator;
-            QList<QDateTime>::iterator tempReadindDataTimeIterator;
-            QList<QStringList>::iterator tempLogDataIterator;
-            tempDirectoryIterator = test.m_directory.begin();
-            tempReadindDataTimeIterator = test.m_readingDateTime.begin();
-            tempLogDataIterator = test.m_logData.begin();
+//            QByteArray tempArray;
+//            QTextStream tempStream(&workSpaceFile);
+//            QList<QString>::iterator tempFileNameIterator;
+//            QList<QString>::iterator tempDirectoryIterator;
+//            QList<QDateTime>::iterator tempReadindDataTimeIterator;
+//            QList<QStringList>::iterator tempLogDataIterator;
+//            tempDirectoryIterator = test.m_directory.begin();
+//            tempReadindDataTimeIterator = test.m_readingDateTime.begin();
+//            tempLogDataIterator = test.m_logData.begin();
 
-            for (tempFileNameIterator = test.m_fileName.begin(); tempFileNameIterator != test.m_fileName.end(); ++tempFileNameIterator)
-            {
-                tempArray = (*tempFileNameIterator).toLocal8Bit();
-                workSpaceFile.write(tempArray);
-                tempStream << endl;
+//            for (tempFileNameIterator = test.m_fileName.begin(); tempFileNameIterator != test.m_fileName.end(); ++tempFileNameIterator)
+//            {
+//                tempArray = (*tempFileNameIterator).toLocal8Bit();
+//                workSpaceFile.write(tempArray);
+//                tempStream << endl;
 
-                tempArray = (*tempDirectoryIterator).toLocal8Bit();
-                workSpaceFile.write(tempArray);
-                tempStream << endl;
+//                tempArray = (*tempDirectoryIterator).toLocal8Bit();
+//                workSpaceFile.write(tempArray);
+//                tempStream << endl;
 
-                tempArray = (*tempReadindDataTimeIterator).date().toString("dd.MM.yy").toLocal8Bit();
-                workSpaceFile.write(tempArray);
-                tempStream << endl;
+//                tempArray = (*tempReadindDataTimeIterator).date().toString("dd.MM.yy").toLocal8Bit();
+//                workSpaceFile.write(tempArray);
+//                tempStream << endl;
 
-                tempArray = (*tempReadindDataTimeIterator).time().toString("hh:mm:ss").toLocal8Bit();
-                workSpaceFile.write(tempArray);
-                tempStream << endl;
+//                tempArray = (*tempReadindDataTimeIterator).time().toString("hh:mm:ss").toLocal8Bit();
+//                workSpaceFile.write(tempArray);
+//                tempStream << endl;
 
-                for(int i = 0; i < (*tempLogDataIterator).size(); i++)
-                {
-                    tempArray = (*tempLogDataIterator).at(i).toLocal8Bit();
-                    workSpaceFile.write(tempArray);
-                    tempStream << endl;
-                }
+//                for(int i = 0; i < (*tempLogDataIterator).size(); i++)
+//                {
+//                    tempArray = (*tempLogDataIterator).at(i).toLocal8Bit();
+//                    workSpaceFile.write(tempArray);
+//                    tempStream << endl;
+//                }
 
-                tempDirectoryIterator++;
-                tempReadindDataTimeIterator++;
-                tempLogDataIterator++;
+//                tempDirectoryIterator++;
+//                tempReadindDataTimeIterator++;
+//                tempLogDataIterator++;
 
-                tempArray.clear();
-            }
-            workSpaceFile.close();
-    }
+//                tempArray.clear();
+//            }
+//            workSpaceFile.close();
+//    }
 
-    else if(PathName.isEmpty())
-    {
-        qDebug() << "Ошибка записи файла";
-        QMessageBox::information(this,"Attention","File saving canceled");
-        return;
-    }
+//    else if(PathName.isEmpty())
+//    {
+//        qDebug() << "Ошибка записи файла";
+//        QMessageBox::information(this,"Attention","File saving canceled");
+//        return;
+//    }
 
-    QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly created").arg(PathName), 5000);
-}
+//    QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly created").arg(PathName), 5000);
+//}
 
 void MainWindow::initPortActionsConnections()
 {
@@ -507,80 +508,102 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
     }
 }
 
-void MainWindow::makeTest()
+//void MainWindow::makeTest()
+//{
+//    QString sral = "SRAL?";
+//    QString F ="F";
+//    QByteArray newdata = sral.toLatin1() + '\r';
+//    writeData(newdata);
+//    QTime timer;
+//    timer.start ();
+//    for(;timer.elapsed() < 1000;)
+//    {
+//        qApp->processEvents(0);
+//    }
+
+//    tempString = reseaveData;
+//    mytest.m_fileName.push_back(tempString);
+//    mytest.m_readingDateTime.push_back(nowDateTime = QDateTime::currentDateTime());
+
+//    QMainWindow::statusBar()->showMessage(tr("The test is performing"));
+
+//    logSpace->append("Test started at... ");
+//    nowDateTime = QDateTime::currentDateTime();
+//    Date = nowDateTime.date();
+//    Time = nowDateTime.time();
+//    nowDate = Date.toString("dd.MM.yy");
+//    nowTime = Time.toString("hh:mm:ss");
+//    logSpace->append(nowDate);
+//    logSpace->append(nowTime);
+//    logSpace->append("\n");
+
+//    QStringList serialList;
+
+//    for(int i = 0; i < 50; i++)
+//        {
+//            newdata = F.toLatin1() + '\r';
+//            writeData(newdata);
+//            QTime timer;
+//            timer.start () ;
+//            for(;timer.elapsed() < 300;)
+//                {
+//                    qApp->processEvents(0);
+//                }
+//            tempString = reseaveData;
+//            serialList << tempString;
+//            qDebug() << tempString << "was wrote.";
+//        }
+
+//    QList<QString>::iterator serialListIterator;
+
+//    for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
+//            {
+//               int n = (*serialListIterator).size();
+//               if (n < 5)
+//                   {
+//                       serialList.erase(serialListIterator);
+//                   }
+//               (*serialListIterator).remove("\n");
+//               (*serialListIterator).remove("\r");
+//               (*serialListIterator).replace("\t"," ");
+
+//               logSpace->append((*serialListIterator));
+//               logSpace->append("cleaned");
+//            }
+//    mytest.m_logData.push_back(serialList);
+
+//    logSpace->append("Test finished at... ");
+//    nowDateTime = QDateTime::currentDateTime();
+//    Date = nowDateTime.date();
+//    Time = nowDateTime.time();
+//    nowDate = Date.toString("dd.MM.yy");
+//    nowTime = Time.toString("hh:mm:ss");
+//    logSpace->append(nowDate);
+//    logSpace->append(nowTime);
+
+//    QMainWindow::statusBar()->showMessage(tr("The test is finished"));
+//}
+
+void MainWindow::Writetestdatatoitem(Test temptest)
 {
-    QString sral = "SRAL?";
-    QString F ="F";
-    QByteArray newdata = sral.toLatin1() + '\r';
-    writeData(newdata);
-    QTime timer;
-    timer.start ();
-    for(;timer.elapsed() < 1000;)
-    {
-        qApp->processEvents(0);
-    }
-
-    tempString = reseaveData;
-    mytest.m_fileName.push_back(tempString);
-    mytest.m_readingDateTime.push_back(nowDateTime = QDateTime::currentDateTime());
-
-    QMainWindow::statusBar()->showMessage(tr("The test is performing"));
-
-    logSpace->append("Test started at... ");
-    nowDateTime = QDateTime::currentDateTime();
-    Date = nowDateTime.date();
-    Time = nowDateTime.time();
-    nowDate = Date.toString("dd.MM.yy");
-    nowTime = Time.toString("hh:mm:ss");
-    logSpace->append(nowDate);
-    logSpace->append(nowTime);
-    logSpace->append("\n");
-
-    QStringList serialList;
-
-    for(int i = 0; i < 50; i++)
-        {
-            newdata = F.toLatin1() + '\r';
-            writeData(newdata);
-            QTime timer;
-            timer.start () ;
-            for(;timer.elapsed() < 300;)
-                {
-                    qApp->processEvents(0);
-                }
-            tempString = reseaveData;
-            serialList << tempString;
-            qDebug() << tempString << "was wrote.";
-        }
-
-    QList<QString>::iterator serialListIterator;
-
-    for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
-            {
-               int n = (*serialListIterator).size();
-               if (n < 5)
-                   {
-                       serialList.erase(serialListIterator);
-                   }
-               (*serialListIterator).remove("\n");
-               (*serialListIterator).remove("\r");
-               (*serialListIterator).replace("\t"," ");
-
-               logSpace->append((*serialListIterator));
-               logSpace->append("cleaned");
-            }
-    mytest.m_logData.push_back(serialList);
-
-    logSpace->append("Test finished at... ");
-    nowDateTime = QDateTime::currentDateTime();
-    Date = nowDateTime.date();
-    Time = nowDateTime.time();
-    nowDate = Date.toString("dd.MM.yy");
-    nowTime = Time.toString("hh:mm:ss");
-    logSpace->append(nowDate);
-    logSpace->append(nowTime);
-
-    QMainWindow::statusBar()->showMessage(tr("The test is finished"));
+    QModelIndex index = workSpace->selectionModel()->currentIndex();
+    QAbstractItemModel *model = workSpace->model();
+    QVariant variant = QVariant::fromValue(temptest);
+    model->setData(index, variant);
 }
 
+void MainWindow::BottomWrite()
+{
+    Writetestdatatoitem(test);
+    resizeColumn();
+}
+
+void MainWindow::resizeColumn()
+{
+    QAbstractItemModel *model = workSpace->model();
+    for (int column = 0; column < model->columnCount(); ++column)
+    {
+        workSpace->resizeColumnToContents(column);
+    }
+}
 

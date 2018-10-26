@@ -6,7 +6,7 @@
 #include <QVector>
 #include "test.h"
 
-//! [0]
+
 class TreeItem
 {
 public:
@@ -36,8 +36,9 @@ public:
 
     bool setData(int column, const QVariant &value);
 
-    bool setTestData(const Test &temptest);
+    void WroteTestData();
 
+    bool getDataFlag();
 
 private:
 
@@ -50,7 +51,9 @@ private:
 
     Test test;
 
+    bool dataFlag = false;
+
 };
-//! [0]
+
 
 #endif // TREEITEM_H

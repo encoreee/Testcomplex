@@ -1,9 +1,10 @@
 #include <QtWidgets>
 #include "mytreeitem.h"
 #include "mytreemodel.h"
+#include <QDateTime>
 
 
-TreeModel::TreeModel(const QStringList &headers, QObject *parent) : QAbstractItemModel(parent)
+TreeModel::TreeModel(const QStringList &headers, QObject *parent) : QAbstractItemModel (parent)
 {
     QVector<QVariant> rootData;
     foreach (QString header, headers)
@@ -36,10 +37,46 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     return item->data(index.column());
 }
 
+bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (role != Qt::EditRole)
+        return false;
+    if(value.canConvert<QString>())
+    {
+        TreeItem *item = getItem(index);
+        bool result = item->setData(index.column(), value);
+
+        if (result)
+            emit dataChanged(index, index);
+
+        return result;
+    }
+    else
+    {
+        TreeItem *item = getItem(index);
+        bool result = item->setData(index.column(), value);
+        Test test = value.value<Test>();
+        result = item->setData(index.column(), test.m_testName);
+
+        QString Date = test.m_readingDateTime.date().toString();
+        QString Time = test.m_readingDateTime.time().toString();
+        item->setData(1, Date);
+        item->setData(2, Time);
+        item->WroteTestData();
+        return result;
+    }
+}
+
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
         return 0;
+
+    TreeItem *item = getItem(index);
+    bool flag = item->getDataFlag();
+
+    if(flag)
+    return Qt::ItemIsSelectable | QAbstractItemModel::flags(index);
 
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
@@ -76,36 +113,18 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
         return QModelIndex();
 }
 
-//QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const
-//{
-//    if (parent.isValid() && parent.column() != 0)
-//        return QModelIndex();
-
-//    TreeItem *parentItem = getItem(parent);
-
-//    TreeItem *childItem = parentItem->child(row);
-//    if (childItem)
-//    {
-//        QModelIndex index = createIndex(row, column, childItem);
-//        auto* itemInfo = static_cast<TreeItem*>(index.internalPointer());
-//        itemInfo = childItem;
-//        parent.internalPointer() = itemInfo;
-//        return index;
-//    }
-//    else
-
-//        return QModelIndex();
-//}
-
 bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
 {
-    bool success;
 
-    beginInsertColumns(parent, position, position + columns - 1);
-    success = rootItem->insertColumns(position, columns);
-    endInsertColumns();
+    if(columnCount(parent) < 3)
+    {
+        bool success;
+        beginInsertColumns(parent, position, position + columns - 1);
+        success = rootItem->insertColumns(position, columns);
+        endInsertColumns();
 
-    return success;
+        return success;
+    }
 }
 
 bool TreeModel::insertRows(int position, int rows, const QModelIndex &parent)
@@ -165,34 +184,6 @@ int TreeModel::rowCount(const QModelIndex &parent) const
     TreeItem *parentItem = getItem(parent);
 
     return parentItem->childCount();
-}
-
-bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (role != Qt::EditRole)
-        return false;
-
-    TreeItem *item = getItem(index);
-    bool result = item->setData(index.column(), value);
-
-    if (result)
-        emit dataChanged(index, index);
-
-    return result;
-}
-
-bool TreeModel::setTestData(const QModelIndex &index, const Test temptest, int role)
-{
-    if (role != Qt::EditRole)
-        return false;
-
-    TreeItem *item = getItem(index);
-    bool result = item->setTestData(temptest);
-
-    if (result)
-        emit dataChanged(index, index);
-
-    return result;
 }
 
 bool TreeModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)

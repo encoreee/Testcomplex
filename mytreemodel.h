@@ -33,8 +33,6 @@ public:
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    bool setTestData(const QModelIndex &index, const Test temptest, int role);
-
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole) override;
 
     bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex()) override;

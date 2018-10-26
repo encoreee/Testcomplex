@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTreeView>
+#include "test.h"
 
 class MyTreeView : public QTreeView
 {

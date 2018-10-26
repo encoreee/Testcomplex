@@ -63,19 +63,22 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         bool removeColumn();
         void removeRow();
         void readLogFile();
-        void testTempFiles();
-        void saveTestToFile();
+//        void testTempFiles();
+//        void saveTestToFile();
         void initPortActionsConnections();
         void openSerialPort();
         void closeSerialPort();
         void writeData(const QByteArray &data);
         void readData();
         void handleError(QSerialPort::SerialPortError error);
-        void makeTest();
+//        void makeTest();
         void collectdata(const QByteArray &data);
         void printData(const QByteArray &data);
         void cancelSelection();
         bool eventFilter(QObject *object, QEvent *event);
+        void Writetestdatatoitem(Test temptest);
+        void BottomWrite();
+        void resizeColumn();
 
 };
 

@@ -100,7 +100,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -161,6 +161,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
     <addaction name="actionMaketest1"/>
+    <addaction name="actionAdd_Test_Data_to_Test_item"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="font">
@@ -376,6 +377,16 @@ p, li { white-space: pre-wrap; }
   <action name="actionMaketest1">
    <property name="text">
     <string>Make test 1</string>
+   </property>
+  </action>
+  <action name="actionAdd_Test_Data_to_Test_item">
+   <property name="text">
+    <string>Add Test Data to Test item</string>
+   </property>
+  </action>
+  <action name="actioninsertColumn">
+   <property name="text">
+    <string>insertColumn</string>
    </property>
   </action>
  </widget>

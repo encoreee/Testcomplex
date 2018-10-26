@@ -6,7 +6,9 @@ Test::Test()
 }
 Test::~Test()
 {
+
 }
+
 void Test::setTestName(QString testName)
 {
   m_testName = testName;

@@ -106,17 +106,24 @@ bool TreeItem::setData(int column, const QVariant &value)
     if (column < 0 || column >= itemData.size())
         return false;
 
-    itemData[column] = value;
-    return true;
+    if(value.canConvert<QString>())
+    {
+        itemData[column] = value;
+        return true;
+    }
+    else
+    {
+        test = value.value<Test>();
+        return true;
+    }
 }
 
-bool TreeItem::setTestData(const Test &temptest)
+void TreeItem::WroteTestData()
 {
-    if(temptest.m_logData.first().isEmpty())
-        qDebug() << "Temp list is empty";
-        return false;
-
-    test = temptest;
-    return true;
+    dataFlag = true;
 }
 
+bool TreeItem::getDataFlag()
+{
+    return dataFlag;
+}
