@@ -14,9 +14,10 @@ class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 
-   signals:
+    signals:
 
-    void ItemHaveData(Test *data) const;
+    void ItemHaveData(Test * data) const;
+
 
    public:
 
@@ -60,8 +61,6 @@ private:
     TreeItem *getItem(const QModelIndex &index) const;
 
     TreeItem *rootItem;
-
-    Test temptest;
 
 };
 

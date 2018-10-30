@@ -10,8 +10,9 @@ typedef QPair<QVariant,Test> DataPair;
 
 class TreeItem
 {
+
 public:
-    explicit TreeItem(const QVector<QVariant> &data, TreeItem *parent = 0);
+    explicit TreeItem(const QVector<QVariant> &data, TreeItem *parent = nullptr);
 
     ~TreeItem();
 
@@ -43,6 +44,8 @@ public:
 
     void resetDataFlag();
 
+    Test * testptr = &ItemTest;
+
 private:
 
 
@@ -52,7 +55,7 @@ private:
 
     TreeItem *parentItem;
 
-    Test test;
+    Test ItemTest;
 
     bool dataFlag = false;
 

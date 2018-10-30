@@ -36,14 +36,10 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     QVariant varaint = item->data(index.column());
     DataPair pair = varaint.value<DataPair>();
 
-
-       emit ItemHaveData(tempptr);
+    emit ItemHaveData(item->testptr);
 
    return pair.first;
 }
-
-
-
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
@@ -64,13 +60,14 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
         TreeItem *item = getItem(index);
         bool result = item->setData(index.column(), value);
         Test test = value.value<Test>();
-        item->setData(index.column(), test.m_testName);
-
         QString Date = test.m_readingDateTime.date().toString();
         QString Time = test.m_readingDateTime.time().toString();
+
+        item->setData(index.column(), test.m_testName);
         item->setData(1, Date);
         item->setData(2, Time);
         item->WroteTestData();
+
         return result;
     }
 }
@@ -78,7 +75,7 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
 Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
-        return 0;
+        return nullptr;
 
     TreeItem *item = getItem(index);
     bool flag = item->getDataFlag();

@@ -75,8 +75,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::BottomWrite);
     connect(model, &TreeModel::ItemHaveData, this, &MainWindow::WriteItemDataToTest);
     connect(actionTestItem, &QAction::triggered, this, &MainWindow::TestWroteDate);
-    connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::SelectReaction);
-    connect(actionGetData, &QAction::triggered, this, &MainWindow::GetData);
+
+    connect(actionGetData, &QAction::triggered, this, &MainWindow::SelectReaction);
 
     initPortActionsConnections();
 
@@ -478,7 +478,7 @@ void MainWindow::readData()
     timer.start () ;
     for(;timer.elapsed() < 100;)
     {
-        qApp->processEvents(0);
+        qApp->processEvents(nullptr);
     }
     reseaveData = "";
     reseaveData = m_serial->readAll();
@@ -619,7 +619,8 @@ void MainWindow::TestWroteDate()
    logSpace->append(mytest.m_directory);
    logSpace->append(mytest.m_fileName);
    logSpace->append(mytest.m_testName);
-//   logSpace->append(mytest.m_logData.first());
+   if(!mytest.m_logData.isEmpty())
+   logSpace->append(mytest.m_logData.first());
 
 }
 
@@ -628,6 +629,7 @@ void MainWindow::SelectReaction()
    QModelIndex index = workSpace->selectionModel()->currentIndex();
    QAbstractItemModel *model = workSpace->model();
    model->data(index, Qt::EditRole);
+   GetData();
 }
 
 void MainWindow::GetData()

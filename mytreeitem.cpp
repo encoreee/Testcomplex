@@ -43,9 +43,8 @@ QVariant TreeItem::data(int column) const
         DataPair pair;
         pair.first = itemData.value(column);
 
-
-        pair.second = test;
-
+        if(dataFlag)
+           pair.second = ItemTest;
 
         return QVariant::fromValue(pair);
 }
@@ -62,7 +61,8 @@ bool TreeItem::setData(int column, const QVariant &value)
     }
     else
     {
-        test = value.value<Test>();
+        ItemTest = value.value<Test>();
+
         return true;
     }
 }
