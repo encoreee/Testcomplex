@@ -6,13 +6,19 @@
 #include <QVariant>
 #include "test.h"
 
+typedef QPair<QVariant,Test> DataPair;
+
 class TreeItem;
 
 class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 
-public:
+   signals:
+
+    void ItemHaveData(Test *data) const;
+
+   public:
 
     TreeModel(const QStringList &headers,  QObject *parent = 0);
     ~TreeModel() override;
@@ -54,6 +60,9 @@ private:
     TreeItem *getItem(const QModelIndex &index) const;
 
     TreeItem *rootItem;
+
+    Test temptest;
+
 };
 
 #endif // TREEMODEL_H

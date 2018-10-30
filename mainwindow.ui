@@ -162,6 +162,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="separator"/>
     <addaction name="actionMaketest1"/>
     <addaction name="actionAdd_Test_Data_to_Test_item"/>
+    <addaction name="actionGetData"/>
+    <addaction name="actionTestItem"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="font">
@@ -387,6 +389,16 @@ p, li { white-space: pre-wrap; }
   <action name="actioninsertColumn">
    <property name="text">
     <string>insertColumn</string>
+   </property>
+  </action>
+  <action name="actionTestItem">
+   <property name="text">
+    <string>TestItem</string>
+   </property>
+  </action>
+  <action name="actionGetData">
+   <property name="text">
+    <string>GetData</string>
    </property>
   </action>
  </widget>

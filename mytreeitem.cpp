@@ -39,7 +39,32 @@ int TreeItem::columnCount() const
 
 QVariant TreeItem::data(int column) const
 {
-    return itemData.value(column);
+
+        DataPair pair;
+        pair.first = itemData.value(column);
+
+
+        pair.second = test;
+
+
+        return QVariant::fromValue(pair);
+}
+
+bool TreeItem::setData(int column, const QVariant &value)
+{
+    if (column < 0 || column >= itemData.size())
+        return false;
+
+    if(value.canConvert<QString>())
+    {
+        itemData[column] = value;
+        return true;
+    }
+    else
+    {
+        test = value.value<Test>();
+        return true;
+    }
 }
 
 bool TreeItem::insertChildren(int position, int count, int columns)
@@ -101,23 +126,6 @@ bool TreeItem::removeColumns(int position, int columns)
     return true;
 }
 
-bool TreeItem::setData(int column, const QVariant &value)
-{
-    if (column < 0 || column >= itemData.size())
-        return false;
-
-    if(value.canConvert<QString>())
-    {
-        itemData[column] = value;
-        return true;
-    }
-    else
-    {
-        test = value.value<Test>();
-        return true;
-    }
-}
-
 void TreeItem::WroteTestData()
 {
     dataFlag = true;
@@ -127,3 +135,11 @@ bool TreeItem::getDataFlag()
 {
     return dataFlag;
 }
+
+void TreeItem::resetDataFlag()
+{
+    dataFlag = false;
+}
+
+
+

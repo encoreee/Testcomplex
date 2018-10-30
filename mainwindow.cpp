@@ -73,7 +73,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 //    connect(actionMaketest1,&QAction::triggered, this, &MainWindow::makeTest);
     connect(this, &MainWindow::haveData,this, &MainWindow::printData);
     connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::BottomWrite);
-
+    connect(model, &TreeModel::ItemHaveData, this, &MainWindow::WriteItemDataToTest);
+    connect(actionTestItem, &QAction::triggered, this, &MainWindow::TestWroteDate);
+    connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::SelectReaction);
+    connect(actionGetData, &QAction::triggered, this, &MainWindow::GetData);
 
     initPortActionsConnections();
 
@@ -115,7 +118,7 @@ void MainWindow::insertChild()
             model->setHeaderData(column, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
     }
 
-    workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
+//    workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
 
     cancelSelection();
     resizeColumn();
@@ -178,8 +181,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 
 void MainWindow::cancelSelection()
 {
-    QItemSelection selection = workSpace->selectionModel()->selection();
-    workSpace->selectionModel()->select(selection, QItemSelectionModel::Clear);
     workSpace->selectionModel()->reset();
 }
 
@@ -590,6 +591,12 @@ void MainWindow::Writetestdatatoitem(Test temptest)
     QAbstractItemModel *model = workSpace->model();
     QVariant variant = QVariant::fromValue(temptest);
     model->setData(index, variant);
+    cancelSelection();
+}
+
+void MainWindow::WriteItemDataToTest(Test *data)
+{
+    testPtr = data;
 }
 
 void MainWindow::BottomWrite()
@@ -607,3 +614,23 @@ void MainWindow::resizeColumn()
     }
 }
 
+void MainWindow::TestWroteDate()
+{
+   logSpace->append(mytest.m_directory);
+   logSpace->append(mytest.m_fileName);
+   logSpace->append(mytest.m_testName);
+//   logSpace->append(mytest.m_logData.first());
+
+}
+
+void MainWindow::SelectReaction()
+{
+   QModelIndex index = workSpace->selectionModel()->currentIndex();
+   QAbstractItemModel *model = workSpace->model();
+   model->data(index, Qt::EditRole);
+}
+
+void MainWindow::GetData()
+{
+ mytest = *(testPtr);
+}

@@ -6,6 +6,7 @@
 #include <QVector>
 #include "test.h"
 
+typedef QPair<QVariant,Test> DataPair;
 
 class TreeItem
 {
@@ -40,6 +41,8 @@ public:
 
     bool getDataFlag();
 
+    void resetDataFlag();
+
 private:
 
 
@@ -55,5 +58,5 @@ private:
 
 };
 
-
+Q_DECLARE_METATYPE(DataPair)
 #endif // TREEITEM_H

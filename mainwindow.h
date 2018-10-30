@@ -21,6 +21,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
     signals:
 
         void haveData(const QByteArray data);
+        void getItemData(const QByteArray &data);
 
     public:
 
@@ -45,6 +46,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         QStringList tempList;
         QFileInfo logFileInfo;
         Test test;
+        Test *testPtr = nullptr;
         Test mytest;
         QByteArray reseaveData = "";
         QByteArray buffer = "";
@@ -77,8 +79,13 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void cancelSelection();
         bool eventFilter(QObject *object, QEvent *event);
         void Writetestdatatoitem(Test temptest);
+        void WriteItemDataToTest(Test *data);
         void BottomWrite();
         void resizeColumn();
+        void TestWroteDate();
+        void SelectReaction();
+        void GetData();
+
 
 };
 

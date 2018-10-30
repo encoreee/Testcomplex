@@ -14,9 +14,25 @@ class Test
 
         ~Test();
 
-            Test & operator= (Test const & othertest)
+              const Test & operator= ( Test const &othertest)
             {
                 m_testName = othertest.m_testName;
+                m_fileName = othertest.m_fileName;
+                m_directory = othertest.m_directory;
+                m_logData = othertest.m_logData;
+                m_readingDateTime = othertest.m_readingDateTime;
+
+                return *this;
+            }
+
+            Test & operator= ( Test&othertest)
+            {
+                m_testName = othertest.m_testName;
+                m_fileName = othertest.m_fileName;
+                m_directory = othertest.m_directory;
+                m_logData = othertest.m_logData;
+                m_readingDateTime = othertest.m_readingDateTime;
+
                 return *this;
             }
 
@@ -25,6 +41,7 @@ class Test
         QString m_directory;
         QStringList m_logData;
         QDateTime m_readingDateTime;
+        bool isEmpty = true;
 
 };
 

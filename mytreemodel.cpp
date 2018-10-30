@@ -27,15 +27,23 @@ int TreeModel::columnCount(const QModelIndex & /* parent */) const
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
-        return QVariant();
+       return QVariant();
 
     if (role != Qt::DisplayRole && role != Qt::EditRole)
         return QVariant();
 
     TreeItem *item = getItem(index);
+    QVariant varaint = item->data(index.column());
+    DataPair pair = varaint.value<DataPair>();
 
-    return item->data(index.column());
+
+       emit ItemHaveData(tempptr);
+
+   return pair.first;
 }
+
+
+
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
@@ -56,7 +64,7 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
         TreeItem *item = getItem(index);
         bool result = item->setData(index.column(), value);
         Test test = value.value<Test>();
-        result = item->setData(index.column(), test.m_testName);
+        item->setData(index.column(), test.m_testName);
 
         QString Date = test.m_readingDateTime.date().toString();
         QString Time = test.m_readingDateTime.time().toString();
@@ -94,8 +102,11 @@ TreeItem *TreeModel::getItem(const QModelIndex &index) const
 QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-        return rootItem->data(section);
-
+    {
+        QVariant headerdata = rootItem->data(section);
+        DataPair pair = headerdata.value<DataPair>();
+        return pair.first;
+    }
     return QVariant();
 }
 
