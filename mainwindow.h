@@ -25,7 +25,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
 
     public:
 
-         MainWindow(QWidget *parent = 0);
+         MainWindow(QWidget *parent = nullptr);
          ~MainWindow();
 
     public slots:
@@ -53,6 +53,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         QString message = "";
         SettingsDialog *m_settings = nullptr;
         QSerialPort *m_serial = nullptr;
+        unsigned int logFileID = 0;
 
 //        CommandLineEventFilter* key = new CommandLineEventFilter();
 
@@ -78,13 +79,13 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void printData(const QByteArray &data);
         void cancelSelection();
         bool eventFilter(QObject *object, QEvent *event);
-        void Writetestdatatoitem(Test temptest);
-        void WriteItemDataToTest(Test *data);
-        void BottomWrite();
+        void writeTestDataToItem(Test temptest);
+        void writeItemDataToTest(Test *data);
+        void bottomWrite();
         void resizeColumn();
-        void TestWroteDate();
-        void SelectReaction();
-        void GetData();
+        void testWroteDate();
+        void selectReaction();
+        void getData();
 
 
 };

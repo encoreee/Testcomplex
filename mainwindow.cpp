@@ -72,12 +72,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(m_serial, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
 //    connect(actionMaketest1,&QAction::triggered, this, &MainWindow::makeTest);
     connect(this, &MainWindow::haveData,this, &MainWindow::printData);
-    connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::BottomWrite);
-    connect(model, &TreeModel::ItemHaveData, this, &MainWindow::WriteItemDataToTest);
-    connect(actionTestItem, &QAction::triggered, this, &MainWindow::TestWroteDate);
-
-    connect(actionGetData, &QAction::triggered, this, &MainWindow::SelectReaction);
-
+    connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::bottomWrite);
+    connect(model, &TreeModel::itemHaveData, this, &MainWindow::writeItemDataToTest);
+    connect(actionTestItem, &QAction::triggered, this, &MainWindow::testWroteDate);
+    connect(actionGetData, &QAction::triggered, this, &MainWindow::selectReaction);
     initPortActionsConnections();
 
 //    connect(removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn); // Позже допилить
@@ -118,7 +116,7 @@ void MainWindow::insertChild()
             model->setHeaderData(column, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
     }
 
-//    workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
+    workSpace->selectionModel()->setCurrentIndex(model->index(0, 0, index),QItemSelectionModel::ClearAndSelect);
 
     cancelSelection();
     resizeColumn();
@@ -293,8 +291,8 @@ void MainWindow::readLogFile()
 
         for (tempListIterator = tempList.begin(); tempListIterator != tempList.end(); ++tempListIterator)
                 {
-
                    int n = (*tempListIterator).size();
+
                    if (n < 5)
                        {
                            tempList.erase(tempListIterator);
@@ -303,7 +301,6 @@ void MainWindow::readLogFile()
                    (*tempListIterator).remove("\n");
                    (*tempListIterator).replace("\t"," ");
                    logSpace->append((*tempListIterator));
-
                 }
         logSpace->append("\n");
         logSpace->append("File reading finished at... ");
@@ -323,6 +320,17 @@ void MainWindow::readLogFile()
         test.m_directory = PathName;
         test.m_fileName = logFileInfo.fileName();
         test.m_readingDateTime = nowDateTime = QDateTime::currentDateTime();
+
+        bool select;
+        QString testName = QInputDialog::getText(nullptr,"Enter logfile name","Name:", QLineEdit::Normal, "MyLogFile", &select);
+        test.setTestName(testName);
+
+        // Если была нажата кнопка Cancel
+        if (!select)
+        {
+            testName = "Log File" + QString::number(++logFileID);
+            test.setTestName(testName);
+        }
 
         QMessageBox::information(this,"Attention","File sucsesfuly read");
         QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
@@ -585,23 +593,24 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
 //    QMainWindow::statusBar()->showMessage(tr("The test is finished"));
 //}
 
-void MainWindow::Writetestdatatoitem(Test temptest)
+void MainWindow::writeTestDataToItem(Test temptest)
 {
     QModelIndex index = workSpace->selectionModel()->currentIndex();
     QAbstractItemModel *model = workSpace->model();
     QVariant variant = QVariant::fromValue(temptest);
     model->setData(index, variant);
     cancelSelection();
+    resizeColumn();
 }
 
-void MainWindow::WriteItemDataToTest(Test *data)
+void MainWindow::writeItemDataToTest(Test *data)
 {
     testPtr = data;
 }
 
-void MainWindow::BottomWrite()
+void MainWindow::bottomWrite()
 {
-    Writetestdatatoitem(test);
+    writeTestDataToItem(test);
     resizeColumn();
 }
 
@@ -614,7 +623,7 @@ void MainWindow::resizeColumn()
     }
 }
 
-void MainWindow::TestWroteDate()
+void MainWindow::testWroteDate()
 {
    logSpace->append(mytest.m_directory);
    logSpace->append(mytest.m_fileName);
@@ -624,15 +633,15 @@ void MainWindow::TestWroteDate()
 
 }
 
-void MainWindow::SelectReaction()
+void MainWindow::selectReaction()
 {
    QModelIndex index = workSpace->selectionModel()->currentIndex();
    QAbstractItemModel *model = workSpace->model();
    model->data(index, Qt::EditRole);
-   GetData();
+   getData();
 }
 
-void MainWindow::GetData()
+void MainWindow::getData()
 {
  mytest = *(testPtr);
 }

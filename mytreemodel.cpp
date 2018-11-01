@@ -36,7 +36,7 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     QVariant varaint = item->data(index.column());
     DataPair pair = varaint.value<DataPair>();
 
-    emit ItemHaveData(item->testptr);
+    emit itemHaveData(item->testptr);
 
    return pair.first;
 }

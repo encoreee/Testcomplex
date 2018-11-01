@@ -16,7 +16,7 @@ class TreeModel : public QAbstractItemModel
 
     signals:
 
-    void ItemHaveData(Test * data) const;
+    void itemHaveData(Test * data) const;
 
 
    public:
