@@ -45,15 +45,17 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         QString tempString;
         QStringList tempList;
         QFileInfo logFileInfo;
-        Test test;
+        Test inputTest;
         Test *testPtr = nullptr;
-        Test mytest;
+        Test outputTest;
         QByteArray reseaveData = "";
         QByteArray buffer = "";
         QString message = "";
         SettingsDialog *m_settings = nullptr;
         QSerialPort *m_serial = nullptr;
         unsigned int logFileID = 0;
+        bool breakingPoint = false;
+        bool testPerforming = false;
 
 //        CommandLineEventFilter* key = new CommandLineEventFilter();
 
@@ -66,7 +68,6 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         bool removeColumn();
         void removeRow();
         void readLogFile();
-//        void testTempFiles();
 //        void saveTestToFile();
         void initPortActionsConnections();
         void openSerialPort();
@@ -74,7 +75,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void writeData(const QByteArray &data);
         void readData();
         void handleError(QSerialPort::SerialPortError error);
-//        void makeTest();
+        void collectLogDataFromSensor();
         void collectdata(const QByteArray &data);
         void printData(const QByteArray &data);
         void cancelSelection();

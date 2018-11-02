@@ -36,8 +36,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     actionConnect->setEnabled(true);
     actionDisconnect->setEnabled(false);
     actionConfigure_serial_port->setEnabled(true);
-    actionMaketest1->setEnabled(false);
-
+    actionCollect_data_from_sensor->setEnabled(false);
 
     QStringList headers;
     headers << tr("Test name") << tr("Date") << tr("Time");
@@ -53,6 +52,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     resizeColumn();
 
     workSpace->installEventFilter(this);
+    logSpace->installEventFilter(this);
+    commandLine->installEventFilter(this);
 
     connect(actionExit, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
@@ -61,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(actionAdd_to_test, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionRemove, &QAction::triggered, this, &MainWindow::removeRow);
     connect(actionAdd_existing_file, &QAction::triggered, this, &MainWindow::readLogFile);
-    connect(actionRead_log, &QAction::triggered, this, &MainWindow::readLogFile);
+    connect(actionRead_existing_log_file, &QAction::triggered, this, &MainWindow::readLogFile);
     connect(actionClean_logspace, &QAction::triggered, this, &MainWindow::cleanLogSpace);
 //    connect(actionMake_SNR_test, &QAction::triggered, this, &MainWindow::testTempFiles);
 //    connect(actionSave_test_as, &QAction::triggered, this, &MainWindow::saveTestToFile);
@@ -70,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(pushButton, &QPushButton::clicked, commandLine, &CommandLine::sendBybotton);
     connect(commandLine, &CommandLine::returnPressed, commandLine, &CommandLine::sendBybotton);
     connect(m_serial, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
-//    connect(actionMaketest1,&QAction::triggered, this, &MainWindow::makeTest);
+    connect(actionCollect_data_from_sensor,&QAction::triggered, this, &MainWindow::collectLogDataFromSensor);
     connect(this, &MainWindow::haveData,this, &MainWindow::printData);
     connect(actionAdd_Test_Data_to_Test_item, &QAction::triggered,this, &MainWindow::bottomWrite);
     connect(model, &TreeModel::itemHaveData, this, &MainWindow::writeItemDataToTest);
@@ -169,11 +170,33 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
         cancelSelection();
         updateActions();
         return true;
-        }
-        else
-
-        return false;
+        } 
     }
+    if (object == logSpace  && event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key() == Qt::Key_Escape)
+        {
+            if(testPerforming)
+            {
+                breakingPoint = true;
+                return true;
+            }
+        }
+    }
+    if (object == commandLine  && event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key() == Qt::Key_Escape)
+        {
+            if(testPerforming)
+            {
+                breakingPoint = true;
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -315,43 +338,26 @@ void MainWindow::readLogFile()
         logSpace->append(nowTime);
         logSpace->append("\n");
 
-        test.setTestName("first test");
-        test.m_logData = tempList;
-        test.m_directory = PathName;
-        test.m_fileName = logFileInfo.fileName();
-        test.m_readingDateTime = nowDateTime = QDateTime::currentDateTime();
+        inputTest.m_logData = tempList;
+        inputTest.m_directory = PathName;
+        inputTest.m_fileName = logFileInfo.fileName();
+        inputTest.m_readingDateTime = nowDateTime = QDateTime::currentDateTime();
 
         bool select;
         QString testName = QInputDialog::getText(nullptr,"Enter logfile name","Name:", QLineEdit::Normal, "MyLogFile", &select);
-        test.setTestName(testName);
+        inputTest.setTestName(testName);
 
         // Если была нажата кнопка Cancel
         if (!select)
         {
             testName = "Log File" + QString::number(++logFileID);
-            test.setTestName(testName);
+            inputTest.setTestName(testName);
         }
 
         QMessageBox::information(this,"Attention","File sucsesfuly read");
         QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
     }
 }
-
-//void MainWindow::testTempFiles()
-//{
-//    qDebug() << test.m_logData.at(0).at(0);
-//    qDebug() << test.m_directory.at(0);
-//    qDebug() << test.m_fileName.at(0);
-//    qDebug() << test.m_readingDateTime.at(0).time().toString("hh:mm:ss");
-//    qDebug() << test.m_logData.at(1).at(0);
-//    qDebug() << test.m_directory.at(1);
-//    qDebug() << test.m_fileName.at(1);
-//    qDebug() << test.m_readingDateTime.at(1).time().toString("hh:mm:ss");
-//    qDebug() << test.m_logData.at(2).at(0);
-//    qDebug() << test.m_directory.at(2);
-//    qDebug() << test.m_fileName.at(2);
-//    qDebug() << test.m_readingDateTime.at(2).time().toString("hh:mm:ss");
-//}
 
 //void MainWindow::saveTestToFile()
 //{
@@ -434,7 +440,7 @@ void MainWindow::openSerialPort()
     m_serial->setStopBits(p.stopBits);
     m_serial->setFlowControl(p.flowControl);
     pushButton->setEnabled(true);
-    actionMaketest1->setEnabled(true);
+    actionCollect_data_from_sensor->setEnabled(true);
 
 
     if (m_serial->open(QIODevice::ReadWrite))
@@ -465,7 +471,7 @@ void MainWindow::closeSerialPort()
     actionConnect->setEnabled(true);
     actionDisconnect->setEnabled(false);
     actionConfigure_serial_port->setEnabled(true);
-    actionMaketest1->setEnabled(false);
+    actionCollect_data_from_sensor->setEnabled(false);
     QMainWindow::statusBar()->showMessage(tr("Disconected"), 5000);
 }
 
@@ -475,8 +481,8 @@ void MainWindow::writeData(const QByteArray &data)
     m_serial->write(data);
     if(commandLine->m_localEchoEnabled)
     {
-      QString stringdata = data;
-      logSpace->append(stringdata);
+        QString stringdata = data;
+        logSpace->append(stringdata);
     } 
 }
 
@@ -491,7 +497,6 @@ void MainWindow::readData()
     reseaveData = "";
     reseaveData = m_serial->readAll();
     emit haveData(reseaveData);
-
 }
 
 void MainWindow::collectdata(const QByteArray &data)
@@ -517,81 +522,247 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
     }
 }
 
-//void MainWindow::makeTest()
-//{
-//    QString sral = "SRAL?";
-//    QString F ="F";
-//    QByteArray newdata = sral.toLatin1() + '\r';
-//    writeData(newdata);
-//    QTime timer;
-//    timer.start ();
-//    for(;timer.elapsed() < 1000;)
-//    {
-//        qApp->processEvents(0);
-//    }
+void MainWindow::collectLogDataFromSensor()
+{
+    inputTest.cleanData(); // Очищаем входной контейнер
 
-//    tempString = reseaveData;
-//    mytest.m_fileName.push_back(tempString);
-//    mytest.m_readingDateTime.push_back(nowDateTime = QDateTime::currentDateTime());
+    QMessageBox::StandardButton question;
+    question = QMessageBox::question(this, QString::fromUtf8("Attention!"),
+                                     QString::fromUtf8("Do you want to create log file?"),
+                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
-//    QMainWindow::statusBar()->showMessage(tr("The test is performing"));
+    if (question == QMessageBox::Yes)
+    {
 
-//    logSpace->append("Test started at... ");
-//    nowDateTime = QDateTime::currentDateTime();
-//    Date = nowDateTime.date();
-//    Time = nowDateTime.time();
-//    nowDate = Date.toString("dd.MM.yy");
-//    nowTime = Time.toString("hh:mm:ss");
-//    logSpace->append(nowDate);
-//    logSpace->append(nowTime);
-//    logSpace->append("\n");
+        bool select;
+        QString testName = QInputDialog::getText(nullptr,
+                                                 "Enter logfile name",
+                                                 "Name:",
+                                                 QLineEdit::Normal,
+                                                 "MyLogFile",
+                                                 &select);
+        inputTest.setTestName(testName);
 
-//    QStringList serialList;
+        if (!select)     // Если была нажата кнопка Cancel
+        {
+            testName = "Log File" + QString::number(++logFileID);
+            inputTest.setTestName(testName);
+        }
 
-//    for(int i = 0; i < 50; i++)
-//        {
-//            newdata = F.toLatin1() + '\r';
-//            writeData(newdata);
-//            QTime timer;
-//            timer.start () ;
-//            for(;timer.elapsed() < 300;)
-//                {
-//                    qApp->processEvents(0);
-//                }
-//            tempString = reseaveData;
-//            serialList << tempString;
-//            qDebug() << tempString << "was wrote.";
-//        }
+        QString sral = "SRAL?";
+        QString F ="F";
+        QByteArray newdata = sral.toLatin1() + '\r';
+        writeData(newdata);
+        QTime timer;
+        timer.start();
 
-//    QList<QString>::iterator serialListIterator;
+        for(;timer.elapsed() < 1000;)
+        {
+            qApp->processEvents(nullptr);
+        }
 
-//    for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
-//            {
-//               int n = (*serialListIterator).size();
-//               if (n < 5)
-//                   {
-//                       serialList.erase(serialListIterator);
-//                   }
-//               (*serialListIterator).remove("\n");
-//               (*serialListIterator).remove("\r");
-//               (*serialListIterator).replace("\t"," ");
+        tempString = reseaveData;
+        QString filename = inputTest.m_fileName = tempString;
+        filename.remove("\r");
+//        filename.append(".txt");
+        nowDateTime = QDateTime::currentDateTime();
+        inputTest.m_readingDateTime = nowDateTime;
 
-//               logSpace->append((*serialListIterator));
-//               logSpace->append("cleaned");
-//            }
-//    mytest.m_logData.push_back(serialList);
 
-//    logSpace->append("Test finished at... ");
-//    nowDateTime = QDateTime::currentDateTime();
-//    Date = nowDateTime.date();
-//    Time = nowDateTime.time();
-//    nowDate = Date.toString("dd.MM.yy");
-//    nowTime = Time.toString("hh:mm:ss");
-//    logSpace->append(nowDate);
-//    logSpace->append(nowTime);
 
-//    QMainWindow::statusBar()->showMessage(tr("The test is finished"));
-//}
+        QString PathName = QFileDialog::getSaveFileName(this, tr("Save logfile"),
+                                                        filename,
+                                                        tr("logfile (*.txt);;All Files (*)"));
+//        QString PathName = QDir::current().currentPath();
+        QFile file (PathName);
+//        QFile file ("D:/"+filename);
+        bool open = file.open(QIODevice::WriteOnly | QIODevice::Text);
+        if (!open)
+        qDebug() << "file not opened";
+
+        QMainWindow::statusBar()->showMessage
+                (tr("The test is performing, set cursor on command line and press ESC to STOP"));
+
+        logSpace->append("Test started at... ");
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+        logSpace->append("\n");
+
+        QStringList serialList;
+        QTextStream stream(&file);
+        testPerforming = true;
+        for(int i = 0;; i++)
+            {
+                newdata = F.toLatin1() + '\r';
+                writeData(newdata);
+                QTime timer;
+                timer.start () ;
+                for(;timer.elapsed() < 300;)
+                    {
+                        qApp->processEvents(nullptr);
+                    }
+                tempString = reseaveData;
+                serialList << tempString;
+                stream << tempString;
+                qDebug() << tempString << "was wrote.";
+                if(breakingPoint)
+                    break;
+                qApp->processEvents(nullptr);
+            }
+            breakingPoint = false;
+
+            file.close();
+            if (stream.status() != QTextStream::Ok)
+            {
+                qDebug() << "Ошибка записи файла";
+            }
+
+        QList<QString>::iterator serialListIterator;
+
+        for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
+                {
+                   int n = (*serialListIterator).size();
+                   if (n < 5)
+                       {
+                           serialList.erase(serialListIterator);
+                       }
+                   (*serialListIterator).remove("\n");
+                   (*serialListIterator).remove("\r");
+                   (*serialListIterator).replace("\t"," ");
+
+                   logSpace->append(*serialListIterator);
+                   logSpace->append("cleaned");
+                }
+        inputTest.m_logData = serialList;
+
+        logSpace->append("Test finished at... ");
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+
+        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created"));
+        testPerforming = false;
+    }
+    else if (question == QMessageBox::No)
+    {
+
+        bool select;
+        QString testName = QInputDialog::getText(nullptr,
+                                                 "Enter logfile name",
+                                                 "Name:",
+                                                 QLineEdit::Normal,
+                                                 "MyLogFile",
+                                                 &select);
+        inputTest.setTestName(testName);
+
+        if (!select)     // Если была нажата кнопка Cancel
+        {
+            testName = "Log File" + QString::number(++logFileID);
+            inputTest.setTestName(testName);
+        }
+
+        QString sral = "SRAL?";
+        QString F ="F";
+        QByteArray newdata = sral.toLatin1() + '\r';
+        writeData(newdata);
+        QTime timer;
+        timer.start();
+
+        for(;timer.elapsed() < 1000;)
+        {
+            qApp->processEvents(nullptr);
+        }
+
+        tempString = reseaveData;
+        QString filename = tempString;
+        filename.remove("\r");
+        filename.append(".txt");
+        inputTest.m_fileName = filename;
+        nowDateTime = QDateTime::currentDateTime();
+        inputTest.m_readingDateTime = nowDateTime;
+
+        QMainWindow::statusBar()->showMessage
+                (tr("The test is performing, set cursor on command line and press ESC to STOP"));
+
+        logSpace->append("Test started at... ");
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+        logSpace->append("\n");
+
+        QStringList serialList;
+
+        testPerforming = true;
+        for(int i = 0;; i++)
+            {
+                newdata = F.toLatin1() + '\r';
+                writeData(newdata);
+                QTime timer;
+                timer.start () ;
+                for(;timer.elapsed() < 300;)
+                    {
+                        qApp->processEvents(nullptr);
+                    }
+                tempString = reseaveData;
+                serialList << tempString;
+
+                qDebug() << tempString << "was wrote.";
+                if(breakingPoint)
+                    break;
+                qApp->processEvents(nullptr);
+            }
+            breakingPoint = false;
+
+        QList<QString>::iterator serialListIterator;
+
+        for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
+                {
+                   int n = (*serialListIterator).size();
+                   if (n < 5)
+                       {
+                           serialList.erase(serialListIterator);
+                       }
+                   (*serialListIterator).remove("\n");
+                   (*serialListIterator).remove("\r");
+                   (*serialListIterator).replace("\t"," ");
+
+                   logSpace->append(*serialListIterator);
+                   logSpace->append("cleaned");
+                }
+        inputTest.m_logData = serialList;
+
+        logSpace->append("Test finished at... ");
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+
+        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created"));
+        testPerforming = false;
+    }
+    else
+    {
+        qDebug() << "Canceled";
+    }
+
+
+}
 
 void MainWindow::writeTestDataToItem(Test temptest)
 {
@@ -610,7 +781,7 @@ void MainWindow::writeItemDataToTest(Test *data)
 
 void MainWindow::bottomWrite()
 {
-    writeTestDataToItem(test);
+    writeTestDataToItem(inputTest);
     resizeColumn();
 }
 
@@ -625,11 +796,11 @@ void MainWindow::resizeColumn()
 
 void MainWindow::testWroteDate()
 {
-   logSpace->append(mytest.m_directory);
-   logSpace->append(mytest.m_fileName);
-   logSpace->append(mytest.m_testName);
-   if(!mytest.m_logData.isEmpty())
-   logSpace->append(mytest.m_logData.first());
+   logSpace->append(outputTest.m_directory);
+   logSpace->append(outputTest.m_fileName);
+   logSpace->append(outputTest.m_testName);
+   if(!outputTest.m_logData.isEmpty())
+   logSpace->append(outputTest.m_logData.first());
 
 }
 
@@ -643,5 +814,5 @@ void MainWindow::selectReaction()
 
 void MainWindow::getData()
 {
- mytest = *(testPtr);
+ outputTest = *(testPtr);
 }

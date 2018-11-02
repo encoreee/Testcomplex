@@ -60,8 +60,8 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
         TreeItem *item = getItem(index);
         bool result = item->setData(index.column(), value);
         Test test = value.value<Test>();
-        QString Date = test.m_readingDateTime.date().toString();
-        QString Time = test.m_readingDateTime.time().toString();
+        QString Date = test.m_readingDateTime.date().toString("dd.MM.yy");
+        QString Time = test.m_readingDateTime.time().toString("hh:mm:ss");
 
         item->setData(index.column(), test.m_testName);
         item->setData(1, Date);

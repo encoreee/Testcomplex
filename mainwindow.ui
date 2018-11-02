@@ -100,7 +100,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="font">
@@ -160,10 +160,11 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionConnect"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
-    <addaction name="actionMaketest1"/>
+    <addaction name="actionCollect_data_from_sensor"/>
     <addaction name="actionAdd_Test_Data_to_Test_item"/>
     <addaction name="actionGetData"/>
     <addaction name="actionTestItem"/>
+    <addaction name="actionRead_existing_log_file"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="font">
@@ -206,19 +207,11 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <widget class="QMenu" name="menuMy_test_buttons">
-    <property name="title">
-     <string>My test buttons</string>
-    </property>
-    <addaction name="actionRead_log"/>
-    <addaction name="actionMake_SNR_test"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
    <addaction name="menuView"/>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuMy_test_buttons"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionNew_workspace">
@@ -346,11 +339,6 @@ p, li { white-space: pre-wrap; }
     <string>About</string>
    </property>
   </action>
-  <action name="actionRead_log">
-   <property name="text">
-    <string>Read log file</string>
-   </property>
-  </action>
   <action name="actionMake_SNR_test">
    <property name="text">
     <string>Make SNR test</string>
@@ -376,9 +364,9 @@ p, li { white-space: pre-wrap; }
     <string>Disconnect</string>
    </property>
   </action>
-  <action name="actionMaketest1">
+  <action name="actionCollect_data_from_sensor">
    <property name="text">
-    <string>Make test 1</string>
+    <string>Collect data from sensor</string>
    </property>
   </action>
   <action name="actionAdd_Test_Data_to_Test_item">
@@ -399,6 +387,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionGetData">
    <property name="text">
     <string>GetData</string>
+   </property>
+  </action>
+  <action name="actionRead_existing_log_file">
+   <property name="text">
+    <string>Read existing log file</string>
    </property>
   </action>
  </widget>
