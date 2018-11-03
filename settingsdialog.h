@@ -21,18 +21,18 @@ class SettingsDialog : public QDialog
 public:
     struct Settings
     {
-        QString name;
-        qint32 baudRate;
-        QString stringBaudRate;
-        QSerialPort::DataBits dataBits;
-        QString stringDataBits;
-        QSerialPort::Parity parity;
-        QString stringParity;
-        QSerialPort::StopBits stopBits;
-        QString stringStopBits;
-        QSerialPort::FlowControl flowControl;
-        QString stringFlowControl;
-        bool localEchoEnabled;
+        QString                   name;
+        qint32                    baudRate;
+        QString                   stringBaudRate;
+        QSerialPort::DataBits     dataBits;
+        QString                   stringDataBits;
+        QSerialPort::Parity       parity;
+        QString                   stringParity;
+        QSerialPort::StopBits     stopBits;
+        QString                   stringStopBits;
+        QSerialPort::FlowControl  flowControl;
+        QString                   stringFlowControl;
+        bool                      localEchoEnabled;
     };
 
     explicit SettingsDialog(QWidget *parent = nullptr);

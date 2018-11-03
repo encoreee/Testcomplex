@@ -564,7 +564,6 @@ void MainWindow::collectLogDataFromSensor()
         tempString = reseaveData;
         QString filename = inputTest.m_fileName = tempString;
         filename.remove("\r");
-//        filename.append(".txt");
         nowDateTime = QDateTime::currentDateTime();
         inputTest.m_readingDateTime = nowDateTime;
 
@@ -573,9 +572,8 @@ void MainWindow::collectLogDataFromSensor()
         QString PathName = QFileDialog::getSaveFileName(this, tr("Save logfile"),
                                                         filename,
                                                         tr("logfile (*.txt);;All Files (*)"));
-//        QString PathName = QDir::current().currentPath();
+
         QFile file (PathName);
-//        QFile file ("D:/"+filename);
         bool open = file.open(QIODevice::WriteOnly | QIODevice::Text);
         if (!open)
         qDebug() << "file not opened";
@@ -598,6 +596,9 @@ void MainWindow::collectLogDataFromSensor()
         testPerforming = true;
         for(int i = 0;; i++)
             {
+            QMainWindow::statusBar()->showMessage
+                    (tr("The test is performing, set cursor on command line and press ESC to STOP."
+                        " Cycle %1 is going").arg(i));
                 newdata = F.toLatin1() + '\r';
                 writeData(newdata);
                 QTime timer;
@@ -640,6 +641,7 @@ void MainWindow::collectLogDataFromSensor()
                 }
         inputTest.m_logData = serialList;
 
+        logSpace->append("------------------------------------------------------------------");
         logSpace->append("Test finished at... ");
         nowDateTime = QDateTime::currentDateTime();
         Date = nowDateTime.date();
@@ -648,8 +650,9 @@ void MainWindow::collectLogDataFromSensor()
         nowTime = Time.toString("hh:mm:ss");
         logSpace->append(nowDate);
         logSpace->append(nowTime);
-
-        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created"));
+        logSpace->append("------------------------------------------------------------------");
+        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created, %1 cycles was wrote.")
+                                              .arg(serialList.size()),5000);
         testPerforming = false;
     }
     else if (question == QMessageBox::No)
@@ -690,9 +693,6 @@ void MainWindow::collectLogDataFromSensor()
         nowDateTime = QDateTime::currentDateTime();
         inputTest.m_readingDateTime = nowDateTime;
 
-        QMainWindow::statusBar()->showMessage
-                (tr("The test is performing, set cursor on command line and press ESC to STOP"));
-
         logSpace->append("Test started at... ");
         nowDateTime = QDateTime::currentDateTime();
         Date = nowDateTime.date();
@@ -708,6 +708,9 @@ void MainWindow::collectLogDataFromSensor()
         testPerforming = true;
         for(int i = 0;; i++)
             {
+            QMainWindow::statusBar()->showMessage
+                    (tr("The test is performing, set cursor on command line and press ESC to STOP."
+                        " Cycle %1 is going").arg(i));
                 newdata = F.toLatin1() + '\r';
                 writeData(newdata);
                 QTime timer;
@@ -743,7 +746,7 @@ void MainWindow::collectLogDataFromSensor()
                    logSpace->append("cleaned");
                 }
         inputTest.m_logData = serialList;
-
+        logSpace->append("------------------------------------------------------------------");
         logSpace->append("Test finished at... ");
         nowDateTime = QDateTime::currentDateTime();
         Date = nowDateTime.date();
@@ -752,12 +755,14 @@ void MainWindow::collectLogDataFromSensor()
         nowTime = Time.toString("hh:mm:ss");
         logSpace->append(nowDate);
         logSpace->append(nowTime);
-
-        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created"));
+        logSpace->append("------------------------------------------------------------------");
+        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created, %1 cycles was wrote.")
+                                              .arg(serialList.size()),5000);
         testPerforming = false;
     }
     else
     {
+        QMainWindow::statusBar()->showMessage(tr("Collecting data from sensor is canceled"),5000);
         qDebug() << "Canceled";
     }
 
