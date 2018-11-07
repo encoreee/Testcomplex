@@ -3,6 +3,7 @@
 
 #include "ui_mainwindow.h"
 #include "test.h"
+#include "testingdialog.h"
 //#include "commandlineeventfilter.h"
 
 #include <QMainWindow>
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         QByteArray buffer = "";
         QString message = "";
         SettingsDialog *m_settings = nullptr;
+        TestingDialog *m_testSettings = nullptr;
         QSerialPort *m_serial = nullptr;
         unsigned int logFileID = 0;
         bool breakingPoint = false;
@@ -68,8 +70,10 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         bool removeColumn();
         void removeRow();
         void readLogFile();
-//        void saveTestToFile();
+
         void initPortActionsConnections();
+        void testDialogInitActions();
+
         void openSerialPort();
         void closeSerialPort();
         void writeData(const QByteArray &data);
@@ -78,7 +82,6 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void collectLogDataFromSensor();
         void collectdata(const QByteArray &data);
         void printData(const QByteArray &data);
-        void cancelSelection();
         bool eventFilter(QObject *object, QEvent *event);
         void writeTestDataToItem(Test temptest);
         void writeItemDataToTest(Test *data);
@@ -87,7 +90,8 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void testWroteDate();
         void selectReaction();
         void getData();
-
+        void createTest();
+//        void saveTestToFile();
 
 };
 

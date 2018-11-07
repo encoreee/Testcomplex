@@ -21,7 +21,8 @@ SOURCES += \
         commandLine.cpp \
         mytreeitem.cpp \
         mytreemodel.cpp \
-    mytreeview.cpp
+        mytreeview.cpp \
+        testingdialog.cpp
 
 
 HEADERS += \
@@ -31,12 +32,14 @@ HEADERS += \
         commandLine.h \
         mytreeitem.h \
         mytreemodel.h \
-    mytreeview.h
+        mytreeview.h \
+        testingdialog.h
 
 
 FORMS += \
         mainwindow.ui \
-        settingsdialog.ui
+        settingsdialog.ui \
+        testingdialog.ui
 
 RESOURCES += \
         editabletreemodel.qrc
