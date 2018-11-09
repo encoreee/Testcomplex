@@ -67,6 +67,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void insertChild();
         bool insertColumn();
         void insertRow();
+        void insertTest(QString name);
         bool removeColumn();
         void removeRow();
         void readLogFile();

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>470</width>
+    <height>315</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,27 +25,27 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>GroupBox</string>
+        <string>Available test patterns</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
-         <widget class="QRadioButton" name="radioButton">
+         <widget class="QRadioButton" name="snrButton">
           <property name="text">
-           <string>RadioButton</string>
+           <string>SNR</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QRadioButton" name="radioButton_2">
+         <widget class="QRadioButton" name="warmingupon_2">
           <property name="text">
-           <string>RadioButton</string>
+           <string>Warming-up</string>
           </property>
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QRadioButton" name="radioButton_3">
+         <widget class="QRadioButton" name="crushButton">
           <property name="text">
-           <string>RadioButton</string>
+           <string>Crush</string>
           </property>
          </widget>
         </item>
@@ -59,7 +59,7 @@
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="1" column="1">
-         <widget class="QComboBox" name="comboBox"/>
+         <widget class="QComboBox" name="frequencyBox"/>
         </item>
         <item row="3" column="1">
          <widget class="QComboBox" name="comboBox_3"/>
@@ -70,7 +70,7 @@
         <item row="1" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Poll Frequency</string>
           </property>
          </widget>
         </item>

@@ -12,9 +12,9 @@ TestingDialog::TestingDialog(QWidget *parent) :
 {
      m_testui->setupUi(this);
 
-
      connect(m_testui->createButton, &QPushButton::clicked, this, &TestingDialog::create);
      connect(m_testui->cancelButton, &QPushButton::clicked, this, &TestingDialog::cancel);
+     fillParameters();
 }
 
 TestingDialog::~TestingDialog()
@@ -49,5 +49,13 @@ void TestingDialog::updateSettings()
 
 void TestingDialog::fillParameters()
 {
+    m_testui->frequencyBox->addItem(QStringLiteral("500"), 500);
+    m_testui->frequencyBox->addItem(QStringLiteral("1000"), 1000);
+    m_testui->frequencyBox->addItem(QStringLiteral("1500"), 1500);
+    m_testui->frequencyBox->addItem(QStringLiteral("2000"), 2000);
+    m_testui->frequencyBox->addItem(QStringLiteral("2500"), 2500);
+    m_testui->frequencyBox->addItem(QStringLiteral("5000"), 5000);
 
+    m_testui->frequencyBox->addItem(tr("Custom"));
+    m_testui->frequencyBox->setCurrentIndex(2);
 }

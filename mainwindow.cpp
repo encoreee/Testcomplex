@@ -173,6 +173,36 @@ void MainWindow::insertRow()
     workSpace->selectionModel()->reset();
     resizeColumn();
     updateActions();
+}
+
+void MainWindow::insertTest(QString name)
+{
+
+    QModelIndex index = workSpace->selectionModel()->currentIndex();
+    QAbstractItemModel *model = workSpace->model();
+
+    if (!model->insertRow(index.row()+1, index.parent()))
+        return;
+
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
+
+        QModelIndex child = model->index(index.row()+1, 0, index.parent());
+        model->setData(child, QVariant(name), Qt::DisplayRole);
+
+        child = model->index(index.row()+1, 1, index.parent());
+        model->setData(child, QVariant(nowDate), Qt::DisplayRole);
+
+        child = model->index(index.row()+1, 2, index.parent());
+        model->setData(child, QVariant(nowTime), Qt::DisplayRole);
+
+    workSpace->selectionModel()->clearSelection();
+    workSpace->selectionModel()->reset();
+    resizeColumn();
+    updateActions();
 
 }
 
@@ -182,6 +212,8 @@ void MainWindow::createTest()
     if(m_testSettings->result())
     {
        TestingDialog::TestSettings s = m_testSettings->createTest();
+       QString name = "SNR";
+       insertTest(name);
        insertRow();
     }
     else
