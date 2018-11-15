@@ -92,6 +92,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void selectReaction();
         void getData();
         void createTest();
+        void calculateSNR();
 //        void saveTestToFile();
 
 };

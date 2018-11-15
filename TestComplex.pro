@@ -22,7 +22,16 @@ SOURCES += \
         mytreeitem.cpp \
         mytreemodel.cpp \
         mytreeview.cpp \
-        testingdialog.cpp
+        testingdialog.cpp \
+    interpolation.cpp \
+    ap.cpp \
+    alglibinternal.cpp \
+    alglibmisc.cpp \
+    integration.cpp \
+    linalg.cpp \
+    optimization.cpp \
+    solvers.cpp \
+    specialfunctions.cpp
 
 
 HEADERS += \
@@ -33,7 +42,18 @@ HEADERS += \
         mytreeitem.h \
         mytreemodel.h \
         mytreeview.h \
-        testingdialog.h
+        testingdialog.h \
+    functions.h \
+    interpolation.h \
+    ap.h \
+    stdafx.h \
+    alglibinternal.h \
+    alglibmisc.h \
+    integration.h \
+    linalg.h \
+    optimization.h \
+    solvers.h \
+    specialfunctions.h
 
 
 FORMS += \

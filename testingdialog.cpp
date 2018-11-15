@@ -24,7 +24,6 @@ TestingDialog::~TestingDialog()
 
 bool TestingDialog::create()
 {
-
     accept();
     return true;
 }
@@ -39,6 +38,15 @@ bool TestingDialog::cancel()
 TestingDialog::TestSettings TestingDialog::createTest()
 {
     TestSettings newSettings;
+    if(m_testui->snrButton->isChecked())
+        newSettings.choosenTest = Tests::SNR;
+
+    if(m_testui->warmingupButton->isChecked())
+        newSettings.choosenTest = Tests::WarmingUp;
+
+    if(m_testui->crushButton->isChecked())
+        newSettings.choosenTest = Tests::Crush;
+
     return newSettings;
 }
 

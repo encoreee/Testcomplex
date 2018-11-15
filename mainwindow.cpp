@@ -212,9 +212,25 @@ void MainWindow::createTest()
     if(m_testSettings->result())
     {
        TestingDialog::TestSettings s = m_testSettings->createTest();
-       QString name = "SNR";
-       insertTest(name);
-       insertRow();
+
+       if(s.choosenTest == TestingDialog::Tests::SNR)
+       {
+           QString name = "SNR";
+           insertTest(name);
+       }
+
+       if(s.choosenTest == TestingDialog::Tests::WarmingUp)
+       {
+           QString name = "WarmingUp";
+           insertTest(name);
+       }
+
+       if(s.choosenTest == TestingDialog::Tests::Crush)
+       {
+           QString name = "Crush";
+           insertTest(name);
+       }
+
     }
     else
     {
@@ -819,6 +835,19 @@ void MainWindow::getData()
 {
  outputTest = *(testPtr);
 }
+
+void MainWindow::calculateSNR()
+{
+    QList<int> termo;
+    outputTest.m_logData;
+    QList<QString>::iterator OTIterator;
+    for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
+    {
+
+    }
+
+}
+
 
 //void MainWindow::saveTestToFile()
 //{

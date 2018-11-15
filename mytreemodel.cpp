@@ -43,7 +43,7 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (role != Qt::EditRole)
+    if (role != Qt::EditRole && Qt::DisplayRole)
         return false;
     if(value.canConvert<QString>())
     {

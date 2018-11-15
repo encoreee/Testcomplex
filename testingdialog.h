@@ -25,9 +25,9 @@ public:
 
     enum class Tests
     {
-               SignalToNoise,
-               Test2,
-               Test3
+               SNR,
+               WarmingUp,
+               Crush
     };
 
     struct TestSettings
