@@ -100,7 +100,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -165,6 +165,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionGetData"/>
     <addaction name="actionTestItem"/>
     <addaction name="actionRead_existing_log_file"/>
+    <addaction name="actionMakeSNRtest"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="font">
@@ -392,6 +393,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionRead_existing_log_file">
    <property name="text">
     <string>Read existing log file</string>
+   </property>
+  </action>
+  <action name="actionMakeSNRtest">
+   <property name="text">
+    <string>Make SNR test</string>
    </property>
   </action>
  </widget>

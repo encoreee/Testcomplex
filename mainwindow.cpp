@@ -4,6 +4,7 @@
 #include "settingsdialog.h"
 #include "commandLine.h"
 #include "testingdialog.h"
+#include "polyfunctions.h"
 
 #include <QtWidgets>
 #include <QFile>
@@ -78,6 +79,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(model, &TreeModel::itemHaveData, this, &MainWindow::writeItemDataToTest);
     connect(actionTestItem, &QAction::triggered, this, &MainWindow::testWroteDate);
     connect(actionGetData, &QAction::triggered, this, &MainWindow::selectReaction);
+    connect(actionMakeSNRtest, &QAction::triggered, this, &MainWindow::calculateSNR);
+
     initPortActionsConnections();
     testDialogInitActions();
 
@@ -838,13 +841,37 @@ void MainWindow::getData()
 
 void MainWindow::calculateSNR()
 {
-    QList<int> termo;
-    outputTest.m_logData;
+    QList<double> termo;
+    QList<double> ratioS;
+    QList<double> signalUs;
+    QList<double> signalUref;
+
     QList<QString>::iterator OTIterator;
+
     for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
     {
+        QString s = (*OTIterator).toLocal8Bit();
+        s.remove(1,0);
+        QStringList slist = s.split(' ');
+        double termoValue = slist.at(0).toLocal8Bit().toDouble();
+        double ratioSValue= slist.at(1).toDouble();
+        double signalUsValue = slist.at(2).toDouble();
+        double signalUrefValue = slist.at(3).toDouble();
 
+        termo.append(termoValue);
+        ratioS.append(ratioSValue);
+        signalUs.append(signalUsValue);
+        signalUref.append(signalUrefValue);
     }
+
+
+    float *a, *b, *x, *y, **sums;
+    int N, K;
+    //N - number of data points
+    //K - polinom power
+    //K<=N
+
+
 
 }
 
