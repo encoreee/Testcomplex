@@ -4,6 +4,11 @@
 #include <polyfunctions.h>
 #include <QDebug>
 
+Polyfuntions::~Polyfuntions()
+{
+    freematrix();
+}
+
 void Polyfuntions::setInputData(QList<double> inputData)
 {
     data = inputData;
@@ -19,12 +24,12 @@ void Polyfuntions::allocmatrix()
 {
    //allocate memory for matrixes
 
-   a = new float[K+1];
-   b = new float[K+1];
-   x = new float[N];
-   y = new float[N];
+   a = new double[K+1];
+   b = new double[K+1];
+   x = new double[N];
+   y = new double[N];
 
-   sums = new float*[K+1];
+   sums = new double*[K+1];
 
 
    if(x==nullptr || y==nullptr || a==nullptr || sums==nullptr)
@@ -36,7 +41,7 @@ void Polyfuntions::allocmatrix()
 
    for(int i = 0; i < K + 1; i++)
    {
-       sums[i] = new float[K+1];
+       sums[i] = new double[K+1];
        if(sums[i] == nullptr)
        {
            QString errorString = QString("\nNot enough memory to allocate for %d equations.\n").arg(K+1);
@@ -102,28 +107,32 @@ void Polyfuntions::readmatrix()
 
 }
 
-void diagonal()
+void Polyfuntions::diagonal()
 {
-   int i, j, k;
-   float temp=0;
-   for(i=0; i<K+1; i++)
+    double temp = 0;
+
+   for(int i=0; i<K+1; i++)
    {
-       if(sums[i][i]==0)
+       if(sums[i][i] == 0)
        {
-           for(j=0; j<K+1; j++)
+           for(int j=0; j<K+1; j++)
            {
-               if(j==i) continue;
-               if(sums[j][i] !=0 && sums[i][j]!=0)
+               if(j == i)
+                   continue;
+
+               if(sums[j][i] != 0 && sums[i][j] != 0)
                {
-                   for(k=0; k<K+1; k++)
+                   for(int k = 0; k < K+1; k++)
                    {
                        temp = sums[j][k];
                        sums[j][k] = sums[i][k];
                        sums[i][k] = temp;
                    }
+
                    temp = b[j];
                    b[j] = b[i];
                    b[i] = temp;
+
                    break;
                }
            }
@@ -131,40 +140,75 @@ void diagonal()
    }
 }
 
-void processRows()
+void Polyfuntions::processRows()
 {
-    int i=0,j=0, k=0;
-    for(k=0; k<K+1; k++){
-           for(i=k+1; i<K+1; i++){
-           if(sums[k][k]==0){
-               printf("\nSolution is not exist.\n");
-               return;
-           }
-           float M = sums[i][k] / sums[k][k];
-           for(j=k; j<K+1; j++){
-               sums[i][j] -= M * sums[k][j];
-           }
-           b[i] -= M*b[k];
-           }
-       }
+    if (!isCalculated)
+    {
+        for(int k = 0; k < K+1; k++)
+        {
+            for(int i = k+1; i < K+1; i++)
+            {
+                if(sums[k][k] == 0)
+                {
+                    qDebug() << "\nSolution is not exist.\n";
+                    break;
+                }
+
+                double M = sums[i][k] / sums[k][k];
+
+                for(int j = k; j < K+1; j++)
+                {
+                    sums[i][j] -= M * sums[k][j];
+                }
+
+                b[i] -= M*b[k];
+            }
+        }
+
+        for(int i=(K+1)-1; i >=0; i--)
+        {
+            double s = 0;
+
+            for(int j = i; j < K+1; j++)
+            {
+                s = s + sums[i][j]*a[j];
+            }
+
+            a[i] = (b[i] - s) / sums[i][i];
+        }
+
+        isCalculated = true;
+    }
+
+    else
+    {
+        qDebug() << "coefficients are already calculated";
+    }
 }
 
-
-QList<double> getresult()
+QList<double> Polyfuntions::getresults()
 {
-   QList<double> results;
-   for(int i=0; i<K+1; i++)
-   {
-       printf("a[%d] = %f\n", i, a[i]);
-       results.append(a[i]);
-   }
-   return results;
+    QList<double> results;
+
+    if(isCalculated)
+    {
+        for(int i = 0; i < K+1; i++)
+        {
+            qDebug() << a[i] << endl;
+            results.append(a[i]);
+        }
+
+        return results;
+    }
+
+    qDebug() << "No results" << endl;
+    return results;
 }
 
-void freematrix()
+void Polyfuntions::freematrix()
 {
    //free memory for matrixes
-   for(int i=0; i<K+1; i++)
+   for(int i=0; i < K+1; i++)
    {
        delete [] sums[i];
    }
@@ -173,6 +217,7 @@ void freematrix()
    delete [] x;
    delete [] y;
    delete [] sums;
+   isCalculated = false;
 }
 
 

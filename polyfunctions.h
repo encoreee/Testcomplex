@@ -16,15 +16,17 @@ class Polyfuntions
 
         void setInputData(QList<double> inputData);
         void setPolyPower(int K);
+        QList<double> getresults();
+
 
     private:
 
         void allocmatrix();
-        void freematrix();
         void readmatrix();
-        void printresult();
         void diagonal();
-        void cls();
+        void processRows();
+
+        void freematrix();
 
         // K<=N only
         int K; //K - polinom power
@@ -37,6 +39,7 @@ class Polyfuntions
         double *x;
         double *y;
         double **sums;
+        bool isCalculated = false;
 
 };
 #endif // POLYFUNCTIONS_H
