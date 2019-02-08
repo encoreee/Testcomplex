@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include <process.h>
 #include <math.h>
-#include <polyfunctions.h>
 #include <QDebug>
+#include <iostream>
+#include "polyfunctions.h"
+#include <iomanip>
+
+using namespace std;
+
+Polyfuntions::Polyfuntions()
+{
+
+}
 
 Polyfuntions::~Polyfuntions()
 {
@@ -11,8 +20,11 @@ Polyfuntions::~Polyfuntions()
 
 void Polyfuntions::setInputData(QList<double> inputData)
 {
-    data = inputData;
-    N = data.size();
+    N = inputData.size();
+
+    for (int i = 0; i < inputData.size(); i++) {
+        data.append(inputData.at(i));
+    }
 }
 
 void Polyfuntions::setPolyPower(int K)
@@ -194,7 +206,7 @@ QList<double> Polyfuntions::getresults()
     {
         for(int i = 0; i < K+1; i++)
         {
-            qDebug() << a[i] << endl;
+          //  qDebug() << a[i] << endl;
             results.append(a[i]);
         }
 
@@ -219,5 +231,47 @@ void Polyfuntions::freematrix()
    delete [] sums;
    isCalculated = false;
 }
+
+void Polyfuntions::printmatrix()
+{
+   //print matrix "a"
+    for (int i = 0; i < 3; i++)
+    {
+        cout << endl;
+    }
+
+   for(int i = 0; i < K+1; i++)
+   {
+       for(int j = 0; j < K+1; j++)
+       {
+           cout << "\t"  << setprecision(5) << sums[i][j];
+       }
+       cout << "\t"  << setprecision(5) << b[i] << endl;
+
+   }
+
+}
+
+void Polyfuntions::calculate()
+{
+    allocmatrix();
+    readmatrix();
+    printmatrix();
+    diagonal();
+    printmatrix();
+    processRows();
+    printmatrix();
+}
+
+//void calculateask(){
+//    //Вычисляем коэффициенты полинома первой степениa[1]= 1;
+//    a[0] = -x[0];//цикл по числу полиномов
+//    for(int k=2;k<=n; k++){ //Вычисляем коэффициенты полинома степени k //Вначале старший коэффициент
+//        a[k]= a[k-1]; //затем остальные коэффициенты, кроме последнего
+//        for(int i=k-1;i>0; i--) { a[i] = a[i-1]- a[i]*x[k-1]; } //теперь младший коэффициент
+//        a[0]= -a[0]*x[k-1];}//Последний этап - умножение коэффициентов на an
+//    for(int i=0; i<=n; i++) a[i] = a[i]*an;
+//}
+
 
 

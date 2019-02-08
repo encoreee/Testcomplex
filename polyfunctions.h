@@ -16,7 +16,10 @@ class Polyfuntions
 
         void setInputData(QList<double> inputData);
         void setPolyPower(int K);
+        void calculate();
+        void printmatrix();
         QList<double> getresults();
+
 
 
     private:
@@ -25,8 +28,8 @@ class Polyfuntions
         void readmatrix();
         void diagonal();
         void processRows();
-
         void freematrix();
+
 
         // K<=N only
         int K; //K - polinom power
