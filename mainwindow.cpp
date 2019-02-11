@@ -864,14 +864,20 @@ void MainWindow::calculateSNR()
         signalUref.append(signalUrefValue);
     }
 
+    Polyfuntions polinomUs;
+    polinomUs.setInputData(signalUs);
+    polinomUs.setPolyPower(5);
+    polinomUs.calculate();
+    QList<double> polyCoefSignalUs = polinomUs.getresults();
 
-    float *a, *b, *x, *y, **sums;
-    int N, K;
-    //N - number of data points
-    //K - polinom power
-    //K<=N
 
+    Polyfuntions polinomUref;
+    polinomUref.setInputData(signalUref);
+    polinomUref.setPolyPower(5);
+    polinomUref.calculate();
+    QList<double> polyCoefSignalUref = polinomUref.getresults();
 
+    QList <double> poliValueUs =
 
 }
 
