@@ -864,20 +864,23 @@ void MainWindow::calculateSNR()
         signalUref.append(signalUrefValue);
     }
 
-    Polyfuntions polinomUs;
-    polinomUs.setInputData(signalUs);
-    polinomUs.setPolyPower(5);
-    polinomUs.calculate();
-    QList<double> polyCoefSignalUs = polinomUs.getresults();
+    Polyfuntions polinomUs(signalUs, 5);
+    Polyfuntions polinomUref(signalUref, 5);
 
+    QList <double> poliValueUs = polinomUs.getPolinomValues();
+    QList <double> poliValueUref = polinomUref.getPolinomValues();
 
-    Polyfuntions polinomUref;
-    polinomUref.setInputData(signalUref);
-    polinomUref.setPolyPower(5);
-    polinomUref.calculate();
-    QList<double> polyCoefSignalUref = polinomUref.getresults();
+    double minPolyUs = *std::min_element(poliValueUs.begin(), poliValueUs.end());
+    double minPolyUref = *std::min_element(poliValueUref.begin(), poliValueUref.end());
 
-    QList <double> poliValueUs =
+    QList <double> normUs;
+    QList <double> normUref;
+
+    for(int i = 0; i < signalUs.size(); i++)
+    {
+        normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
+        normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
+    }
 
 }
 

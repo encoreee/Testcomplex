@@ -10,7 +10,7 @@ class Polyfuntions
 {
     public:
 
-        Polyfuntions();
+        Polyfuntions(QList<double> inputData, int K);
 
         ~Polyfuntions();
 
@@ -18,8 +18,8 @@ class Polyfuntions
         void setPolyPower(int K);
         void calculate();
         void printmatrix();
-        QList<double> getresults();
-
+        QList<double> getСoefficients();
+        QList<double> getPolinomValues();
 
 
     private:

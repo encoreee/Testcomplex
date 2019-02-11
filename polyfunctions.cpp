@@ -5,11 +5,15 @@
 #include <iostream>
 #include "polyfunctions.h"
 #include <iomanip>
+#include <QtMath>
 
 using namespace std;
 
-Polyfuntions::Polyfuntions()
+Polyfuntions::Polyfuntions(QList<double> inputData, int K)
 {
+    setInputData(inputData);
+    setPolyPower(K);
+    calculate();
 
 }
 
@@ -198,7 +202,7 @@ void Polyfuntions::processRows()
     }
 }
 
-QList<double> Polyfuntions::getresults()
+QList<double> Polyfuntions::getСoefficients()
 {
     QList<double> results;
 
@@ -256,12 +260,36 @@ void Polyfuntions::calculate()
 {
     allocmatrix();
     readmatrix();
-    printmatrix();
+  //  printmatrix();
     diagonal();
-    printmatrix();
+ //   printmatrix();
     processRows();
-    printmatrix();
+   // printmatrix();
 }
+
+QList<double> Polyfuntions::getPolinomValues()
+{
+    QList<double> polinomValues;
+    double value;
+
+    for(int i = 1; i < data.size()+1; i++)
+    {
+       value = (qPow(i,5) * a[5])
+                      +(qPow(i,4)*a[4])
+                      +(qPow(i,3)*a[3])
+                      +(qPow(i,2)*a[2])
+                      +(i*a[1])
+                      +a[0];
+
+       polinomValues.append(value);
+    }
+
+    return polinomValues;
+}
+
+
+
+
 
 //void calculateask(){
 //    //Вычисляем коэффициенты полинома первой степениa[1]= 1;
