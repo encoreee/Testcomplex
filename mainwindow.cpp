@@ -80,6 +80,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(model, &TreeModel::itemHaveData, this, &MainWindow::writeItemDataToTest);
     connect(actionTestItem, &QAction::triggered, this, &MainWindow::testWroteDate);
     connect(actionGetData, &QAction::triggered, this, &MainWindow::selectReaction);
+    //connect(model, &TreeModel::dataChanged, this, &MainWindow::selectReaction);
+    //connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
+
     connect(actionMakeSNRtest, &QAction::triggered, this, &MainWindow::calculateSNR);
 
     initPortActionsConnections();
@@ -837,7 +840,8 @@ void MainWindow::selectReaction()
 
 void MainWindow::getData()
 {
- outputTest = *(testPtr);
+    outputTest = *(testPtr);
+    outputTest.isEmpty = false;
 }
 
 void MainWindow::calculateSNR()
@@ -849,80 +853,89 @@ void MainWindow::calculateSNR()
 
     QList<QString>::iterator OTIterator;
 
-    for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
+    if(!outputTest.isEmpty)
     {
-        QString s = (*OTIterator).toLocal8Bit();
-        s.remove(1,0);
-        QStringList slist = s.split(' ');
-        double termoValue = slist.at(0).toLocal8Bit().toDouble();
-        double ratioSValue= slist.at(1).toDouble();
-        double signalUsValue = slist.at(2).toDouble();
-        double signalUrefValue = slist.at(3).toDouble();
+        for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
+        {
+            QString s = (*OTIterator).toLocal8Bit();
+            s.remove(1,0);
+            QStringList slist = s.split(' ');
+            double termoValue = slist.at(0).toLocal8Bit().toDouble();
+            double ratioSValue= slist.at(1).toDouble();
+            double signalUsValue = slist.at(2).toDouble();
+            double signalUrefValue = slist.at(3).toDouble();
 
-        termo.append(termoValue);
-        ratioS.append(ratioSValue);
-        signalUs.append(signalUsValue);
-        signalUref.append(signalUrefValue);
+            termo.append(termoValue);
+            ratioS.append(ratioSValue);
+            signalUs.append(signalUsValue);
+            signalUref.append(signalUrefValue);
+        }
+
+        Polyfuntions polinomUs(signalUs, 5);
+        Polyfuntions polinomUref(signalUref, 5);
+
+        QList <double> poliValueUs = polinomUs.getPolinomValues();
+        QList <double> poliValueUref = polinomUref.getPolinomValues();
+
+        double minPolyUs = *std::min_element(poliValueUs.begin(), poliValueUs.end());
+        double minPolyUref = *std::min_element(poliValueUref.begin(), poliValueUref.end());
+
+        QList <double> normUs;
+        QList <double> normUref;
+
+        for(int i = 0; i < signalUs.size(); i++)
+        {
+            normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
+            normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
+        }
+        double sumUs;
+        double sumUref;
+
+        for(double d : normUs)
+        {
+            sumUs += d;
+        }
+
+        for(double d : normUref)
+        {
+            sumUref += d;
+        }
+
+        double averageNormUs = sumUs/normUs.size();
+        double averageNormUref = sumUref/normUref.size();
+
+        double sigmaNumeratorUs;
+        double sigmaNumeratorUref;
+
+        for(double d : normUs)
+        {
+            sigmaNumeratorUs += qPow((d - averageNormUs),2);
+        }
+
+        for(double d : normUref)
+        {
+            sigmaNumeratorUref += qPow((d - averageNormUref),2);
+        }
+
+        double sigmaUs = qSqrt(sigmaNumeratorUs/normUs.size());
+        double sigmaUref = qSqrt(sigmaNumeratorUref/normUref.size());
+
+        double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
+        double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
+
+        logSpace->append("------------------------------------------------------------------");
+        logSpace->append("Calculated SNR:");
+        logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
+        logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
+        logSpace->append("------------------------------------------------------------------");
+
+        outputTest.cleanData();
     }
 
-    Polyfuntions polinomUs(signalUs, 5);
-    Polyfuntions polinomUref(signalUref, 5);
-
-    QList <double> poliValueUs = polinomUs.getPolinomValues();
-    QList <double> poliValueUref = polinomUref.getPolinomValues();
-
-    double minPolyUs = *std::min_element(poliValueUs.begin(), poliValueUs.end());
-    double minPolyUref = *std::min_element(poliValueUref.begin(), poliValueUref.end());
-
-    QList <double> normUs;
-    QList <double> normUref;
-
-    for(int i = 0; i < signalUs.size(); i++)
+    else
     {
-        normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
-        normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
+        QMessageBox::information(this,"Attention","No data to processing");
     }
-    double sumUs;
-    double sumUref;
-
-    for(double d : normUs)
-    {
-        sumUs += d;
-    }
-
-    for(double d : normUref)
-    {
-        sumUref += d;
-    }
-
-    double averageNormUs = sumUs/normUs.size();
-    double averageNormUref = sumUref/normUref.size();
-
-    double sigmaNumeratorUs;
-    double sigmaNumeratorUref;
-
-    for(double d : normUs)
-    {
-        sigmaNumeratorUs += qPow((d - averageNormUs),2);
-    }
-
-    for(double d : normUref)
-    {
-        sigmaNumeratorUref += qPow((d - averageNormUref),2);
-    }
-
-    double sigmaUs = qSqrt(sigmaNumeratorUs/normUs.size());
-    double sigmaUref = qSqrt(sigmaNumeratorUref/normUref.size());
-
-    double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
-    double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
-
-    logSpace->append("------------------------------------------------------------------");
-    logSpace->append("Calculated SNR:");
-    logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
-    logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
-    logSpace->append("------------------------------------------------------------------");
-
 }
 
 
