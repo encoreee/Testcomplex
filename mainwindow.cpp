@@ -5,6 +5,7 @@
 #include "commandLine.h"
 #include "testingdialog.h"
 #include "polyfunctions.h"
+#include <math.h>
 
 #include <QtWidgets>
 #include <QFile>
@@ -881,6 +882,46 @@ void MainWindow::calculateSNR()
         normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
         normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
     }
+    double sumUs;
+    double sumUref;
+
+    for(double d : normUs)
+    {
+        sumUs += d;
+    }
+
+    for(double d : normUref)
+    {
+        sumUref += d;
+    }
+
+    double averageNormUs = sumUs/normUs.size();
+    double averageNormUref = sumUref/normUref.size();
+
+    double sigmaNumeratorUs;
+    double sigmaNumeratorUref;
+
+    for(double d : normUs)
+    {
+        sigmaNumeratorUs += qPow((d - averageNormUs),2);
+    }
+
+    for(double d : normUref)
+    {
+        sigmaNumeratorUref += qPow((d - averageNormUref),2);
+    }
+
+    double sigmaUs = qSqrt(sigmaNumeratorUs/normUs.size());
+    double sigmaUref = qSqrt(sigmaNumeratorUref/normUref.size());
+
+    double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
+    double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
+
+    logSpace->append("------------------------------------------------------------------");
+    logSpace->append("Calculated SNR:");
+    logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
+    logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
+    logSpace->append("------------------------------------------------------------------");
 
 }
 

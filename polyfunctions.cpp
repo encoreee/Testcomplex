@@ -14,7 +14,6 @@ Polyfuntions::Polyfuntions(QList<double> inputData, int K)
     setInputData(inputData);
     setPolyPower(K);
     calculate();
-
 }
 
 Polyfuntions::~Polyfuntions()
@@ -202,7 +201,7 @@ void Polyfuntions::processRows()
     }
 }
 
-QList<double> Polyfuntions::getСoefficients()
+QList<double> Polyfuntions::getCoefficients()
 {
     QList<double> results;
 
@@ -289,7 +288,7 @@ QList<double> Polyfuntions::getPolinomValues()
 
 
 
-
+// TODO
 
 //void calculateask(){
 //    //Вычисляем коэффициенты полинома первой степениa[1]= 1;

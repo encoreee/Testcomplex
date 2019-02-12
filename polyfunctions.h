@@ -18,7 +18,7 @@ class Polyfuntions
         void setPolyPower(int K);
         void calculate();
         void printmatrix();
-        QList<double> getСoefficients();
+        QList<double> getCoefficients();
         QList<double> getPolinomValues();
 
 
