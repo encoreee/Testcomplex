@@ -41,7 +41,8 @@ HEADERS += \
 FORMS += \
         mainwindow.ui \
         settingsdialog.ui \
-        testingdialog.ui
+        testingdialog.ui \
+    plot.ui
 
 RESOURCES += \
         editabletreemodel.qrc
