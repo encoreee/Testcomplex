@@ -16,6 +16,7 @@ class Plot : public QWidget
     public:
         explicit Plot(QWidget *parent = nullptr);
         ~Plot();
+        void showPlot(const QList<double> keys, const QList<double> values);
 
     private slots:
       void titleDoubleClick(QMouseEvent *event);
@@ -24,7 +25,7 @@ class Plot : public QWidget
       void selectionChanged();
       void mousePress();
       void mouseWheel();
-      void addRandomGraph();
+    //  void addRandomGraph();
       void removeSelectedGraph();
       void removeAllGraphs();
       void contextMenuRequest(QPoint pos);

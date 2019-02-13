@@ -1,5 +1,7 @@
 #include "plot.h"
 #include "ui_plot.h"
+#include <QList>
+#include <Qvector>
 
 Plot::Plot(QWidget *parent) :
     QWidget(parent),
@@ -180,36 +182,54 @@ void Plot::mouseWheel()
     ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal|Qt::Vertical);
 }
 
-void Plot::addRandomGraph()
+//void Plot::addRandomGraph()
+//{
+//  int n = 50; // number of points in graph
+//  double xScale = (rand()/(double)RAND_MAX + 0.5)*2;
+//  double yScale = (rand()/(double)RAND_MAX + 0.5)*2;
+//  double xOffset = (rand()/(double)RAND_MAX - 0.5)*4;
+//  double yOffset = (rand()/(double)RAND_MAX - 0.5)*10;
+//  double r1 = (rand()/(double)RAND_MAX - 0.5)*2;
+//  double r2 = (rand()/(double)RAND_MAX - 0.5)*2;
+//  double r3 = (rand()/(double)RAND_MAX - 0.5)*2;
+//  double r4 = (rand()/(double)RAND_MAX - 0.5)*2;
+//  QVector<double> x(n), y(n);
+//  for (int i=0; i<n; i++)
+//  {
+//    x[i] = (i/(double)n-0.5)*10.0*xScale + xOffset;
+//    y[i] = (qSin(x[i]*r1*5)*qSin(qCos(x[i]*r2)*r4*3)+r3*qCos(qSin(x[i])*r4*2))*yScale + yOffset;
+//  }
+
+//  ui->customPlot->addGraph();
+//  ui->customPlot->graph()->setName(QString("New graph %1").arg(ui->customPlot->graphCount()-1));
+//  ui->customPlot->graph()->setData(x, y);
+//  ui->customPlot->graph()->setLineStyle((QCPGraph::LineStyle)(rand()%5+1));
+//  if (rand()%100 > 50)
+//    ui->customPlot->graph()->setScatterStyle(QCPScatterStyle((QCPScatterStyle::ScatterShape)(rand()%14+1)));
+//  QPen graphPen;
+//  graphPen.setColor(QColor(rand()%245+10, rand()%245+10, rand()%245+10));
+//  graphPen.setWidthF(rand()/(double)RAND_MAX*2+1);
+//  ui->customPlot->graph()->setPen(graphPen);
+//  ui->customPlot->replot();
+//}
+
+void Plot::showPlot(const QList<double> keys, const QList<double> values)
 {
-  int n = 50; // number of points in graph
-  double xScale = (rand()/(double)RAND_MAX + 0.5)*2;
-  double yScale = (rand()/(double)RAND_MAX + 0.5)*2;
-  double xOffset = (rand()/(double)RAND_MAX - 0.5)*4;
-  double yOffset = (rand()/(double)RAND_MAX - 0.5)*10;
-  double r1 = (rand()/(double)RAND_MAX - 0.5)*2;
-  double r2 = (rand()/(double)RAND_MAX - 0.5)*2;
-  double r3 = (rand()/(double)RAND_MAX - 0.5)*2;
-  double r4 = (rand()/(double)RAND_MAX - 0.5)*2;
-  QVector<double> x(n), y(n);
-  for (int i=0; i<n; i++)
-  {
-    x[i] = (i/(double)n-0.5)*10.0*xScale + xOffset;
-    y[i] = (qSin(x[i]*r1*5)*qSin(qCos(x[i]*r2)*r4*3)+r3*qCos(qSin(x[i])*r4*2))*yScale + yOffset;
-  }
+  QVector<double> x = keys.toVector();
+  QVector<double> y = values.toVector();
 
   ui->customPlot->addGraph();
   ui->customPlot->graph()->setName(QString("New graph %1").arg(ui->customPlot->graphCount()-1));
   ui->customPlot->graph()->setData(x, y);
-  ui->customPlot->graph()->setLineStyle((QCPGraph::LineStyle)(rand()%5+1));
-  if (rand()%100 > 50)
-    ui->customPlot->graph()->setScatterStyle(QCPScatterStyle((QCPScatterStyle::ScatterShape)(rand()%14+1)));
+  ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+  ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
   QPen graphPen;
-  graphPen.setColor(QColor(rand()%245+10, rand()%245+10, rand()%245+10));
-  graphPen.setWidthF(rand()/(double)RAND_MAX*2+1);
+  graphPen.setColor(QColor(255, 0, 0, 127));
+  graphPen.setWidthF(1);
   ui->customPlot->graph()->setPen(graphPen);
   ui->customPlot->replot();
 }
+
 
 void Plot::removeSelectedGraph()
 {

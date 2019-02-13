@@ -6,6 +6,7 @@
 #include "testingdialog.h"
 #include "polyfunctions.h"
 #include <math.h>
+#include "plot.h"
 
 #include <QtWidgets>
 #include <QFile>
@@ -930,6 +931,8 @@ void MainWindow::calculateSNR()
         logSpace->append("------------------------------------------------------------------");
 
         outputTest.cleanData();
+        Plot plot;
+        plot.show();
     }
 
     else
