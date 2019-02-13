@@ -6,7 +6,7 @@
 
 QT       += core gui serialport
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = TestComplex
 TEMPLATE = app
@@ -23,7 +23,9 @@ SOURCES += \
         mytreemodel.cpp \
         mytreeview.cpp \
         testingdialog.cpp \
-    polyfunctions.cpp
+    polyfunctions.cpp \
+    plot.cpp \
+    qcustomplot.cpp
 
 
 HEADERS += \
@@ -35,7 +37,9 @@ HEADERS += \
         mytreemodel.h \
         mytreeview.h \
         testingdialog.h \
-    polyfunctions.h
+    polyfunctions.h \
+    plot.h \
+    qcustomplot.h
 
 
 FORMS += \
