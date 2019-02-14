@@ -9,6 +9,17 @@ namespace Ui {
     class Plot;
 }
 
+enum Styles
+{
+    STYLE_1,
+    STYLE_2,
+    STYLE_3,
+    STYLE_4,
+    STYLE_5
+};
+
+
+
 class Plot : public QWidget
 {
         Q_OBJECT
@@ -16,7 +27,7 @@ class Plot : public QWidget
     public:
         explicit Plot(QWidget *parent = nullptr);
         ~Plot();
-        void showPlot(const QList<double> keys, const QList<double> values);
+        void addGraph(const QList<double> keys, const QList<double> values, Styles style, QString graphName);
 
     private slots:
       void titleDoubleClick(QMouseEvent *event);

@@ -4,6 +4,7 @@
 #include "ui_mainwindow.h"
 #include "test.h"
 #include "testingdialog.h"
+#include "plot.h"
 //#include "commandlineeventfilter.h"
 
 #include <QMainWindow>
@@ -38,6 +39,8 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         QList <Test> testData;
         QList<int> verticalSizes; // Вертикальный разделитель
         QList<int> horizontalSizes; // Горизонтальный разделитель
+
+
         QDateTime nowDateTime = QDateTime::currentDateTime();
         QDate Date;
         QTime Time;
@@ -58,6 +61,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         unsigned int logFileID = 0;
         bool breakingPoint = false;
         bool testPerforming = false;
+
 
 //        CommandLineEventFilter* key = new CommandLineEventFilter();
 

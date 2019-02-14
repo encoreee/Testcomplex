@@ -931,8 +931,21 @@ void MainWindow::calculateSNR()
         logSpace->append("------------------------------------------------------------------");
 
         outputTest.cleanData();
-        Plot plot;
-        plot.show();
+
+        QList<double> auxiliaryList;
+        for(int i = 0; i < signalUs.size(); i ++)
+            auxiliaryList.append(i);
+
+        Plot * plot = new Plot() ;
+
+        plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
+        plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
+        plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
+        plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
+
+        plot->show();
+
+
     }
 
     else

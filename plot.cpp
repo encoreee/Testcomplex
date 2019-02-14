@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "ui_plot.h"
 #include <QList>
-#include <Qvector>
+#include <QVector>
 
 Plot::Plot(QWidget *parent) :
     QWidget(parent),
@@ -10,18 +10,17 @@ Plot::Plot(QWidget *parent) :
     srand(QDateTime::currentDateTime().toTime_t());
     ui->setupUi(this);
 
-    ui->customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
-                                    QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes | QCP::iSelectLegend | QCP::iSelectPlottables);
     ui->customPlot->xAxis->setRange(-8, 8);
     ui->customPlot->yAxis->setRange(-5, 5);
     ui->customPlot->axisRect()->setupFullAxesBox();
 
     ui->customPlot->plotLayout()->insertRow(0);
-    QCPTextElement *title = new QCPTextElement(ui->customPlot, "Interaction Example", QFont("sans", 17, QFont::Bold));
+    QCPTextElement *title = new QCPTextElement(ui->customPlot, "Signal visualization", QFont("sans", 13, QFont::Bold));
     ui->customPlot->plotLayout()->addElement(0, 0, title);
 
-    ui->customPlot->xAxis->setLabel("x Axis");
-    ui->customPlot->yAxis->setLabel("y Axis");
+    ui->customPlot->xAxis->setLabel("АDC counts");
+    ui->customPlot->yAxis->setLabel("Signal values");
     ui->customPlot->legend->setVisible(true);
     QFont legendFont = font();
     legendFont.setPointSize(10);
@@ -213,21 +212,60 @@ void Plot::mouseWheel()
 //  ui->customPlot->replot();
 //}
 
-void Plot::showPlot(const QList<double> keys, const QList<double> values)
+void Plot::addGraph(const QList<double> keys, const QList<double> values, Styles style, QString graphName)
 {
   QVector<double> x = keys.toVector();
   QVector<double> y = values.toVector();
+  QPen graphPen;
 
   ui->customPlot->addGraph();
-  ui->customPlot->graph()->setName(QString("New graph %1").arg(ui->customPlot->graphCount()-1));
+  ui->customPlot->graph()->setName(graphName);
   ui->customPlot->graph()->setData(x, y);
-  ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
-  ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
-  QPen graphPen;
-  graphPen.setColor(QColor(255, 0, 0, 127));
-  graphPen.setWidthF(1);
+
+
+  switch (style)
+  {
+  case STYLE_1:
+      ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+      ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
+      graphPen.setColor(QColor(255, 0, 0, 127));
+      graphPen.setWidthF(1);
+      break;
+
+  case STYLE_2:
+      ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+      ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
+      graphPen.setColor(QColor(0, 0, 255, 127));
+      graphPen.setWidthF(1);
+      break;
+
+  case STYLE_3:
+      ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+      ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
+      graphPen.setColor(QColor(255, 40, 40, 150));
+      graphPen.setWidthF(4);
+      graphPen.setStyle(Qt::DotLine);
+      break;
+
+  case STYLE_4:
+      ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+      ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
+      graphPen.setColor(QColor(40, 40, 255, 255));
+      graphPen.setWidthF(4);
+      graphPen.setStyle(Qt::DotLine);
+      break;
+
+  case STYLE_5:
+      ui->customPlot->graph()->setLineStyle(QCPGraph::LineStyle::lsLine);
+      ui->customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssNone));
+      graphPen.setColor(QColor(255, 0, 0, 127));
+      graphPen.setWidthF(1);
+      break;
+  }
+
   ui->customPlot->graph()->setPen(graphPen);
   ui->customPlot->replot();
+  ui->customPlot->rescaleAxes();
 }
 
 
