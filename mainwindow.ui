@@ -166,6 +166,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionTestItem"/>
     <addaction name="actionRead_existing_log_file"/>
     <addaction name="actionMakeSNRtest"/>
+    <addaction name="actionMake_test"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="font">
@@ -398,6 +399,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionMakeSNRtest">
    <property name="text">
     <string>Make SNR test</string>
+   </property>
+  </action>
+  <action name="actionMake_test">
+   <property name="text">
+    <string>Make test</string>
    </property>
   </action>
  </widget>

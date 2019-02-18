@@ -28,6 +28,7 @@ class Plot : public QWidget
         explicit Plot(QWidget *parent = nullptr);
         ~Plot();
         void addGraph(const QList<double> keys, const QList<double> values, Styles style, QString graphName);
+        static int getPlotCount();
 
     private slots:
       void titleDoubleClick(QMouseEvent *event);
@@ -43,8 +44,10 @@ class Plot : public QWidget
       void moveLegend();
       void graphClicked(QCPAbstractPlottable *plottable, int dataIndex);
 
+
     private:
         Ui::Plot *ui;
+
 };
 
 #endif // PLOT_H

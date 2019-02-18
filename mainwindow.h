@@ -98,6 +98,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void createTest();
         void calculateSNR();
 //        void saveTestToFile();
+        void makeTest();
 
 };
 

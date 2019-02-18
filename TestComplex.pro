@@ -25,7 +25,8 @@ SOURCES += \
         testingdialog.cpp \
     polyfunctions.cpp \
     plot.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    snrthread.cpp
 
 
 HEADERS += \
@@ -39,7 +40,8 @@ HEADERS += \
         testingdialog.h \
     polyfunctions.h \
     plot.h \
-    qcustomplot.h
+    qcustomplot.h \
+    snrthread.h
 
 
 FORMS += \

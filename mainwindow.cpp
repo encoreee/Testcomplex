@@ -15,6 +15,7 @@
 #include <QString>
 #include <QTimer>
 #include <QThread>
+#include <QModelIndexList>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
      m_settings(new SettingsDialog),
@@ -81,7 +82,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(model, &TreeModel::itemHaveData, this, &MainWindow::writeItemDataToTest);
     connect(actionTestItem, &QAction::triggered, this, &MainWindow::testWroteDate);
     connect(actionGetData, &QAction::triggered, this, &MainWindow::selectReaction);
-    //connect(model, &TreeModel::dataChanged, this, &MainWindow::selectReaction);
+    connect(actionMake_test, &QAction::triggered, this, &MainWindow::makeTest);
+//   connect(model, &TreeModel::dataChanged, this, &MainWindow::selectReaction);
     //connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 
     connect(actionMakeSNRtest, &QAction::triggered, this, &MainWindow::calculateSNR);
@@ -246,6 +248,57 @@ void MainWindow::createTest()
     }
 }
 
+void MainWindow::makeTest()
+{
+    QModelIndex selectedIndex = workSpace->selectionModel()->currentIndex();
+    QAbstractItemModel *model = workSpace->model();
+
+    int row = 0; int colomn = 0;
+    while (selectedIndex.child(row,colomn).isValid())
+    {
+        QModelIndex childindex = selectedIndex.child(row,colomn);
+
+        workSpace->setCurrentIndex(childindex);
+        model->data(childindex, Qt::EditRole);
+        getData();
+      //  testWroteDate();
+        calculateSNR();
+        row++;
+        QTime timer;
+        timer.start ();
+        for(;timer.elapsed() < 300;)
+                    {
+                       qApp->processEvents(nullptr);
+                    }
+        outputTest.cleanData();
+
+    }
+
+//    while (selectedIndex.child(row,colomn).isValid())
+//    {
+//        QModelIndex childindex = selectedIndex.child(row,colomn);
+
+//        workSpace->setCurrentIndex(childindex);
+//        model->data(childindex, Qt::EditRole);
+//        QTime timer;
+//        timer.start ();
+//        getData();
+//        for(;timer.elapsed() < 1000;)
+//            {
+//                qApp->processEvents(nullptr);
+//            }
+//        calculateSNR();
+//        row++;
+//    }
+
+    workSpace->selectionModel()->clearSelection();
+    workSpace->selectionModel()->reset();
+
+
+}
+
+
+
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
     if (object == workSpace && event->type() == QEvent::KeyPress)
@@ -326,11 +379,13 @@ void MainWindow::updateActions()
         actionAdd_to_test->setEnabled(true);
         actionNew_test->setDisabled(true);
         }
+
         if (workSpace->selectionModel()->currentIndex().parent().isValid())
         {
         actionAdd_to_test->setDisabled(true);
         actionNew_test->setDisabled(true);
         }
+
         if(workSpace->selectionModel()->currentIndex().column() != 0)
         {
             workSpace->selectionModel()->clearSelection();
@@ -841,8 +896,10 @@ void MainWindow::selectReaction()
 
 void MainWindow::getData()
 {
+
     outputTest = *(testPtr);
     outputTest.isEmpty = false;
+
 }
 
 void MainWindow::calculateSNR()
@@ -930,21 +987,23 @@ void MainWindow::calculateSNR()
         logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
         logSpace->append("------------------------------------------------------------------");
 
-        outputTest.cleanData();
+
 
         QList<double> auxiliaryList;
         for(int i = 0; i < signalUs.size(); i ++)
             auxiliaryList.append(i);
 
-        Plot * plot = new Plot() ;
 
-        plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
-        plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
-        plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
-        plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
+            Plot * plot = new Plot() ;
 
-        plot->show();
+            plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
+            plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
+            plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
+            plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
 
+            plot->show();
+
+        outputTest.cleanData();
 
     }
 

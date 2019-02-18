@@ -55,7 +55,13 @@ Plot::Plot(QWidget *parent) :
     // setup policy and connect slot for context menu popup:
     ui->customPlot->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->customPlot, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
+
+
 }
+
+
+
+
 
 Plot::~Plot()
 {
@@ -330,4 +336,3 @@ void Plot::graphClicked(QCPAbstractPlottable *plottable, int dataIndex)
   QString message = QString("Clicked on graph '%1' at data point #%2 with value %3.").arg(plottable->name()).arg(dataIndex).arg(dataValue);
  // ui->statusBar->showMessage(message, 2500);
 }
-
