@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(actionAdd_to_test, &QAction::triggered, this, &MainWindow::insertChild);
     connect(actionRemove, &QAction::triggered, this, &MainWindow::removeRow);
     connect(actionAdd_existing_file, &QAction::triggered, this, &MainWindow::readLogFile);
-    connect(actionRead_existing_log_file, &QAction::triggered, this, &MainWindow::readLogFile);
+    connect(actionRead_existing_log_file, &QAction::triggered, this, &MainWindow::readLogFiles);
     connect(actionClean_logspace, &QAction::triggered, this, &MainWindow::cleanLogSpace);
 //    connect(actionMake_SNR_test, &QAction::triggered, this, &MainWindow::testTempFiles);
 //    connect(actionSave_test_as, &QAction::triggered, this, &MainWindow::saveTestToFile);
@@ -274,30 +274,9 @@ void MainWindow::makeTest()
 
     }
 
-//    while (selectedIndex.child(row,colomn).isValid())
-//    {
-//        QModelIndex childindex = selectedIndex.child(row,colomn);
-
-//        workSpace->setCurrentIndex(childindex);
-//        model->data(childindex, Qt::EditRole);
-//        QTime timer;
-//        timer.start ();
-//        getData();
-//        for(;timer.elapsed() < 1000;)
-//            {
-//                qApp->processEvents(nullptr);
-//            }
-//        calculateSNR();
-//        row++;
-//    }
-
     workSpace->selectionModel()->clearSelection();
     workSpace->selectionModel()->reset();
-
-
 }
-
-
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
@@ -503,6 +482,174 @@ void MainWindow::readLogFile()
         QMessageBox::information(this,"Attention","File sucsesfuly read");
         QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
     }
+}
+
+void MainWindow::readLogFiles()
+{
+
+    QStringList files = QFileDialog::getOpenFileNames(this,
+                                QString::fromUtf8("Выберите один, или более файлов"),
+                                QDir::currentPath(),
+                                "Images (*.txt);;All files (*.*)");
+    for(QString path : files)
+    {
+        QFile logFile (path);
+
+        if(logFile.isOpen())
+        {
+            qDebug() << "File was opened";
+        }
+
+        logFileInfo.setFile(path);
+
+        if(logFile.open(QIODevice::ReadOnly))
+        {
+            QTextStream tempStream(&logFile);
+
+            while (!tempStream.atEnd())
+                    {
+                       tempString = tempStream.readAll();
+                    }
+
+            if(tempStream.status()!= QTextStream::Ok)
+                    {
+                        qDebug() << "Ошибка чтения файла";
+                        QMessageBox::information(this,"Attention","File reading error.");
+                    }
+
+            nowDateTime = QDateTime::currentDateTime();
+            Date = nowDateTime.date();
+            Time = nowDateTime.time();
+            nowDate = Date.toString("dd.MM.yy");
+            nowTime = Time.toString("hh:mm:ss");
+
+            logSpace->append("File reading started at... ");
+            logSpace->append(nowDate);
+            logSpace->append(nowTime);
+            logSpace->append("\n");
+
+            tempList = tempString.split(QRegExp("\r"), QString::SkipEmptyParts);
+
+            QList<QString>::iterator tempListIterator;
+
+            for (tempListIterator = tempList.begin(); tempListIterator != tempList.end(); ++tempListIterator)
+                    {
+                       int n = (*tempListIterator).size();
+
+                       if (n < 5)
+                           {
+                               tempList.erase(tempListIterator);
+                           }
+
+                       (*tempListIterator).remove("\n");
+                       (*tempListIterator).replace("\t"," ");
+                       logSpace->append((*tempListIterator));
+                    }
+            logSpace->append("\n");
+            logSpace->append("File reading finished at... ");
+
+            nowDateTime = QDateTime::currentDateTime();
+            Date = nowDateTime.date();
+            Time = nowDateTime.time();
+            nowDate = Date.toString("dd.MM.yy");
+            nowTime = Time.toString("hh:mm:ss");
+
+            logSpace->append(nowDate);
+            logSpace->append(nowTime);
+            logSpace->append("\n");
+
+            inputTest.m_logData = tempList;
+            inputTest.m_directory = path;
+            inputTest.m_fileName = logFileInfo.fileName();
+            inputTest.m_testName = logFileInfo.fileName();
+            inputTest.m_readingDateTime = nowDateTime;
+
+            QModelIndex index = workSpace->selectionModel()->currentIndex();
+            QAbstractItemModel *model = workSpace->model();
+
+            logSpace->append("------------------Input test data--------------------------------------");
+            logSpace->append(inputTest.m_directory);
+            logSpace->append(inputTest.m_fileName);
+            logSpace->append(inputTest.m_testName);
+            if(!inputTest.m_logData.isEmpty())
+            logSpace->append(inputTest.m_logData.first());
+              logSpace->append("------------------Input test data--------------------------------------");
+
+
+
+            if (model->columnCount(index) == 0)
+            {
+                if (!model->insertColumn(0, index))
+                    return;
+            }
+
+            if (!model->insertRow(0, index))
+                return;
+
+
+                QModelIndex child1 = model->index(0, 0, index);
+                model->setData(child1, QVariant(inputTest.m_fileName), Qt::EditRole);
+
+                QVariant variant = QVariant::fromValue(inputTest);
+                model->setData(child1, variant);
+
+                QModelIndex child2 = model->index(0, 1, index);
+                model->setData(child2, QVariant(nowDate), Qt::EditRole);
+
+                QModelIndex child3 = model->index(0, 2, index);
+                model->setData(child3, QVariant(nowTime), Qt::EditRole);
+
+                getData();
+
+                logSpace->append("------------------Output test data--------------------------------------");
+                logSpace->append(outputTest.m_directory);
+                logSpace->append(outputTest.m_fileName);
+                logSpace->append(outputTest.m_testName);
+                if(!outputTest.m_logData.isEmpty())
+                logSpace->append(outputTest.m_logData.first());
+                logSpace->append("------------------Output test data--------------------------------------");
+
+
+
+
+
+
+//            QVariant variant = QVariant::fromValue(temptest);
+//            model->setData(index, variant);
+//            workSpace->selectionModel()->clearSelection();
+//            workSpace->selectionModel()->reset();
+//            resizeColumn();
+
+
+//            QVariant variant = QVariant::fromValue(temptest);
+//            model->setData(index, variant);
+
+//            resizeColumn();
+//            updateActions();
+
+
+//            bool select;
+//            QString testName = QInputDialog::getText(nullptr,"Enter logfile name","Name:", QLineEdit::Normal, "MyLogFile", &select);
+//            inputTest.setTestName(testName);
+
+//            // Если была нажата кнопка Cancel
+//            if (!select)
+//            {
+//                testName = "Log File" + QString::number(++logFileID);
+//                inputTest.setTestName(testName);
+//            }
+
+//          //  QMessageBox::information(this,"Attention","File sucsesfuly read");
+
+
+            QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
+        }
+    }
+
+    resizeColumn();
+    updateActions();
+    workSpace->selectionModel()->clearSelection();
+    workSpace->selectionModel()->reset();
 }
 
 void MainWindow::openSerialPort()
@@ -899,7 +1046,6 @@ void MainWindow::getData()
 
     outputTest = *(testPtr);
     outputTest.isEmpty = false;
-
 }
 
 void MainWindow::calculateSNR()
@@ -943,10 +1089,14 @@ void MainWindow::calculateSNR()
             logSpace->append(tr("Coefficient Us: %1").arg(d));
         }
 
+        logSpace->append("");
+
         for(double d : coefUref)
         {
             logSpace->append(tr("Coefficient Uref: %1").arg(d));
         }
+
+        logSpace->append("");
 
 
         QList <double> poliValueUs = polinomUs.getPolinomValues();
@@ -957,6 +1107,8 @@ void MainWindow::calculateSNR()
 
         logSpace->append(tr("min poly Us: %1").arg(minPolyUs));
         logSpace->append(tr("min poly Uref: %1").arg(minPolyUref));
+        logSpace->append("");
+
 
         QList <double> normUs;
         QList <double> normUref;
@@ -983,15 +1135,21 @@ void MainWindow::calculateSNR()
 
         logSpace->append(tr("sumUs: %1").arg(sumUs));
         logSpace->append(tr("sumUref: %1").arg(sumUref));
+        logSpace->append("");
+
 
         logSpace->append(tr("normUs.size: %1").arg(normUs.size()));
         logSpace->append(tr("normUref.size: %1").arg(normUref.size()));
+        logSpace->append("");
+
 
         double averageNormUs = sumUs/normUs.size();
         double averageNormUref = sumUref/normUref.size();
 
         logSpace->append(tr("avarage norm us: %1").arg(averageNormUs));
         logSpace->append(tr("avarage norm uref: %1").arg(averageNormUref));
+        logSpace->append("");
+
 
         double sigmaNumeratorUs;
         double sigmaNumeratorUref;
@@ -1011,6 +1169,8 @@ void MainWindow::calculateSNR()
 
         logSpace->append(tr("Sigma Us: %1").arg(sigmaUs));
         logSpace->append(tr("sigmaUref: %1").arg(sigmaUref));
+        logSpace->append("");
+
 
         double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
         double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
@@ -1020,6 +1180,8 @@ void MainWindow::calculateSNR()
         logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
         logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
         logSpace->append("------------------------------------------------------------------");
+        logSpace->append("");
+
 
 
 

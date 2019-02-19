@@ -75,6 +75,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         bool removeColumn();
         void removeRow();
         void readLogFile();
+        void readLogFiles();
 
         void initPortActionsConnections();
         void testDialogInitActions();
