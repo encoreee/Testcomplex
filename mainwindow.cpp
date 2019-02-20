@@ -30,8 +30,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     verticalSizes << 160 << 700;
     horizontalSizes << 600 << 200 << 25;
-    verticalSplitter->setSizes(verticalSizes);
-    horizontalSplitter->setSizes(horizontalSizes);
+    splitter_2->setSizes(verticalSizes);
+    splitter->setSizes(horizontalSizes);
     commandLine->setFixedHeight(25);
     commandLine->setEnabled(false);
     pushButton->setEnabled(false);
