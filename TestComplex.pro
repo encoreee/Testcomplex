@@ -26,7 +26,8 @@ SOURCES += \
     polyfunctions.cpp \
     plot.cpp \
     qcustomplot.cpp \
-    snrthread.cpp
+    snrthread.cpp \
+    customtable.cpp
 
 
 HEADERS += \
@@ -41,7 +42,8 @@ HEADERS += \
     polyfunctions.h \
     plot.h \
     qcustomplot.h \
-    snrthread.h
+    snrthread.h \
+    customtable.h
 
 
 FORMS += \

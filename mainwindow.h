@@ -97,10 +97,11 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void selectReaction();
         void getData();
         void createTest();
-        void calculateSNR();
+        QPair<double, double> calculateSNR();
 //        void saveTestToFile();
         void makeTest();
-
+        void pasteCell();
+        void copyCell();
 };
 
 #endif // MAINWINDOW_H

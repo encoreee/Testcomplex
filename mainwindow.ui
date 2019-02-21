@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>615</width>
+    <height>525</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -37,7 +37,7 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="MyTreeView" name="workSpace"/>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QSplitter" name="splitter">
@@ -45,14 +45,17 @@
            <enum>Qt::Vertical</enum>
           </property>
           <widget class="QTabWidget" name="tabWidget">
-           <widget class="QWidget" name="tab">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="customTable" name="tab_1">
             <attribute name="title">
-             <string>Tab 1</string>
+             <string>Results</string>
             </attribute>
            </widget>
-           <widget class="QWidget" name="tab_2">
+           <widget class="QCustomPlot" name="tab_2">
             <attribute name="title">
-             <string>Tab 2</string>
+             <string>Plot</string>
             </attribute>
            </widget>
           </widget>
@@ -113,7 +116,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>615</width>
      <height>21</height>
     </rect>
    </property>
@@ -432,6 +435,18 @@ p, li { white-space: pre-wrap; }
    <class>MyTreeView</class>
    <extends>QTreeView</extends>
    <header location="global">mytreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>customTable</class>
+   <extends>QWidget</extends>
+   <header>customtable.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -16,6 +16,7 @@
 #include <QTimer>
 #include <QThread>
 #include <QModelIndexList>
+#include <QPair>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
      m_settings(new SettingsDialog),
@@ -60,6 +61,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     logSpace->installEventFilter(this);
     commandLine->installEventFilter(this);
 
+  // no need
+  //  QObject *obj = new QTableWidget;
+  //  this->tab_1 = qobject_cast<QTableWidget *>(obj);
+  // no need
+
     connect(actionExit, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(workSpace->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
  //   connect(menuFile, &QMenu::aboutToShow, this, &MainWindow::updateActions);
@@ -94,6 +100,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 //    connect(removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn); // Позже допилить
 //    connect(actioninsertColumn, &QAction::triggered, this, &MainWindow::insertColumn); // Позже допилить
 
+    QShortcut *scCtrlC = new QShortcut(QKeySequence("Ctrl+C"), tab_1);
+    connect(scCtrlC, SIGNAL(activated()), this, SLOT(copyCell()));
+    QShortcut *scCtrlV = new QShortcut(QKeySequence("Ctrl+V"), tab_1);
+    connect(scCtrlV, SIGNAL(activated()), this, SLOT(pasteCell()));
+
     updateActions();
 }
 
@@ -118,6 +129,66 @@ void MainWindow::testDialogInitActions()
 void MainWindow::cleanLogSpace()
 {
     logSpace->clear();
+}
+
+void MainWindow::copyCell()
+{
+        QAbstractItemModel* model = tab_1->model();
+        QItemSelectionModel* selection = tab_1->selectionModel();
+        QModelIndexList indexes = selection->selectedIndexes();
+
+        if (indexes.count() == 0) {
+                return;
+        }
+
+        qSort(indexes);
+
+        QString clip;
+        QModelIndex previous = indexes.first();
+        indexes.removeFirst();
+        clip.append(model->data(previous).toString());
+
+        for (QModelIndex current : indexes.toVector())
+        {
+                if (current.row() != previous.row())
+                {
+                        clip.append("\n");
+                }
+                else
+                {
+                        clip.append("\t");
+                }
+
+                clip.append(model->data(current).toString());
+                previous = current;
+        }
+
+        QApplication::clipboard()->setText(clip);
+}
+
+void MainWindow::pasteCell()
+{
+        if (tab_1->selectedItems().size() != 1)
+        {
+                return;
+        }
+        QString clip = QApplication::clipboard()->text();
+        QStringList rowList = clip.split("\n");
+
+        QTableWidgetItem *currentItem = tab_1->selectedItems().first();
+        int pasteRow = currentItem->row();
+        int pasteCol = currentItem->column();
+        for(QString row : rowList.toVector())
+        {
+                QStringList colList = row.split("\t");
+                for (QString cell : colList.toVector())
+                {
+                        tab_1->item(pasteRow, pasteCol)->setText(cell);
+                        pasteCol++;
+                }
+                pasteCol = currentItem->column();
+                pasteRow++;
+        }
 }
 
 void MainWindow::insertChild()
@@ -252,8 +323,11 @@ void MainWindow::makeTest()
 {
     QModelIndex selectedIndex = workSpace->selectionModel()->currentIndex();
     QAbstractItemModel *model = workSpace->model();
+    QVector<double> snrsUs;
+    QVector<double> snrsUref;
 
     int row = 0; int colomn = 0;
+
     while (selectedIndex.child(row,colomn).isValid())
     {
         QModelIndex childindex = selectedIndex.child(row,colomn);
@@ -261,8 +335,15 @@ void MainWindow::makeTest()
         workSpace->setCurrentIndex(childindex);
         model->data(childindex, Qt::EditRole);
         getData();
-      //  testWroteDate();
-        calculateSNR();
+      //  testWroteDate(); // Debug, dont forget to remove
+        QPair<double,double> snrs = calculateSNR();
+
+        if (snrs.first != NULL && snrs.second != NULL)
+        {
+            snrsUs.append(snrs.first);
+            snrsUref.append(snrs.second);
+        }
+
         row++;
         QTime timer;
         timer.start ();
@@ -272,6 +353,57 @@ void MainWindow::makeTest()
                     }
         outputTest.cleanData();
 
+    }
+
+    QVector<double> keys;
+
+    for (int i = 1; i < snrsUs.size()+1; i++)
+    {
+        keys.append(static_cast<double>(i));
+    }
+
+    double minSnrsUs = *std::min_element(snrsUs.begin(), snrsUs.end());
+    double minSnrsUref = *std::min_element(snrsUref.begin(), snrsUref.end());
+
+    double maxSnrsUs = *std::max_element(snrsUs.begin(), snrsUs.end());
+    double maxSnrsUref = *std::max_element(snrsUref.begin(), snrsUref.end());
+    QPen graphPen;
+
+    tab_2->addGraph();
+    tab_2->graph()->setData(keys,snrsUs);
+    graphPen.setColor(QColor(255, 0, 0, 127));
+    graphPen.setWidthF(2);
+    tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
+    tab_2->graph()->setPen(graphPen);
+    tab_2->replot();
+
+    tab_2->addGraph();
+    tab_2->graph()->setData(keys,snrsUref);
+    graphPen.setColor(QColor(0, 0, 255, 127));
+    graphPen.setWidthF(2);
+    tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
+    tab_2->graph()->setPen(graphPen);
+    tab_2->replot();
+
+    tab_2->xAxis->setLabel("Sensors");
+    tab_2->yAxis->setLabel("Signal to noise");
+
+    tab_2->xAxis->setRange(0, snrsUs.size()+1);
+
+    tab_2->yAxis->setRange((minSnrsUs < minSnrsUref ? minSnrsUs : minSnrsUref) - 1 , (maxSnrsUs > maxSnrsUref ? maxSnrsUs : maxSnrsUref) + 1);
+
+    tab_2->replot();
+
+    tab_1->setRowCount(snrsUs.size()+5);
+    tab_1->setColumnCount(5);
+
+    tab_1->setItem(0,0,new QTableWidgetItem(QString("SNR in Us canal")));
+    tab_1->setItem(0,1,new QTableWidgetItem(QString("SNR in Us canal")));
+
+    for (int i = 0, j = 1; i < snrsUs.size(); i++, j++)
+    {
+        tab_1->setItem(j,0,new QTableWidgetItem(QString("%1").arg(snrsUs[i])));
+        tab_1->setItem(j,1,new QTableWidgetItem(QString("%1").arg(snrsUref[i])));
     }
 
     workSpace->selectionModel()->clearSelection();
@@ -322,6 +454,17 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
             }
         }
     }
+
+// dont work
+//    if (object == tab_1 && event->type() == QEvent::KeyPress)
+//    {
+//         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+//         if (keyEvent->key() == QKeySequence::Copy)
+//         {
+//             copyCell();
+//         }
+//    }
+// dont work
 
     return false;
 }
@@ -643,13 +786,21 @@ void MainWindow::readLogFiles()
 
 
             QMainWindow::statusBar()->showMessage(tr("File %1 sucsesfuly read").arg(logFileInfo.fileName()), 5000);
+
+
         }
     }
 
+    QModelIndex index = workSpace->selectionModel()->currentIndex();
+    workSpace->setExpanded(index, true);
     resizeColumn();
     updateActions();
     workSpace->selectionModel()->clearSelection();
     workSpace->selectionModel()->reset();
+
+
+
+
 }
 
 void MainWindow::openSerialPort()
@@ -1048,7 +1199,7 @@ void MainWindow::getData()
     outputTest.isEmpty = false;
 }
 
-void MainWindow::calculateSNR()
+QPair<double,double> MainWindow::calculateSNR()
 {
     QList<double> termo;
     QList<double> ratioS;
@@ -1183,8 +1334,6 @@ void MainWindow::calculateSNR()
         logSpace->append("");
 
 
-
-
         QList<double> auxiliaryList;
         for(int i = 0; i < signalUs.size(); i ++)
             auxiliaryList.append(i);
@@ -1202,12 +1351,18 @@ void MainWindow::calculateSNR()
             plot->show();
 
         outputTest.cleanData();
+        QPair<double,double> snrPair;
+        snrPair.first = snrValueUs;
+        snrPair.second = snrValueUref;
 
+        return snrPair;
     }
 
     else
     {
         QMessageBox::information(this,"Attention","No data to processing");
+        QPair<double,double> snrPairFault;
+        return snrPairFault;
     }
 }
 

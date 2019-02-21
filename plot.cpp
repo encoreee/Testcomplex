@@ -3,8 +3,7 @@
 #include <QList>
 #include <QVector>
 
-Plot::Plot(QWidget *parent) :
-    QWidget(parent),
+Plot::Plot(QWidget *parent) : QWidget(parent),
     ui(new Ui::Plot)
 {
     srand(QDateTime::currentDateTime().toTime_t());
