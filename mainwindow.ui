@@ -178,6 +178,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
     <addaction name="actionCollect_data_from_sensor"/>
+    <addaction name="actionCollect_data_from_device"/>
     <addaction name="actionAdd_Test_Data_to_Test_item"/>
     <addaction name="actionGetData"/>
     <addaction name="actionTestItem"/>
@@ -421,6 +422,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionMake_test">
    <property name="text">
     <string>Make test</string>
+   </property>
+  </action>
+  <action name="actionCollect_data_from_device">
+   <property name="text">
+    <string>Collect data from device</string>
    </property>
   </action>
  </widget>

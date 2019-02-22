@@ -86,6 +86,7 @@ class MainWindow : public QMainWindow , private Ui::MainWindow
         void readData();
         void handleError(QSerialPort::SerialPortError error);
         void collectLogDataFromSensor();
+        void collectLogDataFromDevice();
         void collectdata(const QByteArray &data);
         void printData(const QByteArray &data);
         bool eventFilter(QObject *object, QEvent *event);
