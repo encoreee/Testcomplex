@@ -857,6 +857,8 @@ void MainWindow::writeData(const QByteArray &data)
     {
         QString stringdata = data;
         logSpace->append(stringdata);
+        stringdata.remove("\n");
+        stringdata.remove("\r");
     } 
 }
 
@@ -870,6 +872,10 @@ void MainWindow::readData()
     }
     reseaveData = "";
     reseaveData = m_serial->readAll();
+    for(;timer.elapsed() < 100;)
+    {
+        qApp->processEvents(nullptr);
+    }
     emit haveData(reseaveData);
 }
 
@@ -1155,65 +1161,205 @@ void MainWindow::collectLogDataFromDevice()
     if (m_serial->isOpen())
     {
 
-        QString sral = "SRAL?";
-        QString f ="F";
-        QString rev = "REV?";
-        QString device;
-        QString checkedSensors;
-        QString initSensors;
+    const QString sral = "SRAL?";
+    const QString f ="F";
+    const QString rev = "REV?";
 
-        QByteArray newdata = rev.toLatin1() + '\r';
-        writeData(newdata);
-        QTime timer;
-        timer.start();
+    QList<QModelIndex> childs;
 
-        for(;timer.elapsed() < 500;)
+    QStringList adress;
+    adress << "#00" << "#01"<< "#02"<< "#03"<< "#04"<< "#05"<< "#06"<< "#07"<< "#08"<< "#09"<< "#0A"<< "#0B";
+    QList<QStringList> lists;
+    QStringList activAdress;
+
+
+    QStringList srals;
+
+    QString device;
+    QString deviceFW;
+    QString checkedSensors;
+
+    // initialization
+        do
         {
-            qApp->processEvents(nullptr);
-        }
+            srals.clear();
+            device.clear();
+            deviceFW.clear();
+            checkedSensors.clear();
 
-        tempString = reseaveData;
-        device = tempString;
-
-
-        for(int i = 0x1; i < 0x0C; i++)
-        {
-            tempString = "";
-
-            if (i < 0x10 )
-            {
-                initSensors = QString::fromUtf8("#0%1").arg(i);
-            }
-
-            else
-            {
-                initSensors = QString::fromUtf8("#%1").arg(i);
-            }
-
-            newdata = initSensors.toLatin1() + sral.toLatin1() +'\r';
+            QByteArray newdata = rev.toLatin1() + '\r';
             writeData(newdata);
-            timer.restart();
-            for(;timer.elapsed() < 1500;)
+            QTime timer;
+            timer.start();
+
+            for(;timer.elapsed() < 1200;)
             {
                 qApp->processEvents(nullptr);
             }
 
             tempString = reseaveData;
+            deviceFW = tempString;
+            deviceFW.remove("\r");
+            deviceFW.remove("\n");
 
-            if(!tempString.isEmpty() && !(tempString == "FAL"))
+            if (deviceFW.contains("300100"))
             {
-                checkedSensors += "Sensor " + initSensors + " is ok\n";
-            }
-            else if (tempString.isEmpty() || tempString == "FAL")
-            {
-                checkedSensors += "Sensor " + initSensors + " is not connected\n";
+                device = "Multiplexor";
             }
 
+            checkedSensors.clear();
+
+            for(;timer.elapsed() < 1500;)
+            {
+                qApp->processEvents(nullptr);
+            }
+
+            for(QString s : adress)
+            {
+                tempString.clear();
+                reseaveData.clear();
+
+                newdata = s.toLatin1() + sral.toLatin1() +'\r';
+                writeData(newdata);
+                timer.restart();
+
+                for(int i = 0; i < 3; i++)
+                {
+                    for(;timer.elapsed() < 200;)
+                    {
+                        qApp->processEvents(nullptr);
+                    }
+                    tempString = reseaveData;
+                }
+
+
+                    if(!(tempString  == "") && !tempString.isEmpty() && !(tempString == "FAL\r"))
+                    {
+                        checkedSensors += "Sensor " + s + " is ok\n";
+                        srals.append(tempString);
+                        activAdress.append(s);
+                    }
+                    else if (tempString  == "" || tempString == "FAL\r" || tempString.isEmpty())
+                    {
+                        checkedSensors += "Sensor " + s + " is not connected\n";
+                    }
+            }
+
+            QMessageBox::StandardButton question = QMessageBox::question(this, QString::fromUtf8("Attention!"),
+                                                   QString("Device %1 was connected.\nSoftware version: %2\n" + checkedSensors).arg(device).arg(deviceFW),
+                                                   QMessageBox::Apply | QMessageBox::Retry | QMessageBox::Cancel);
+
+
+            activAdress.clear();
+            checkedSensors.clear();
+
+            if (question == QMessageBox::Cancel){
+                return;
+            }
+
+            if (question == QMessageBox::Apply){
+                break;
+            }
+        }
+        while (true);
+
+        for(QString s : activAdress)
+        {
+            QStringList data;
+            lists.push_front(data);
         }
 
-        QMessageBox::StandardButton question = QMessageBox::question(this, QString::fromUtf8("Attention!"),
-                                               QString("Device %1 was connected. \n" + checkedSensors).arg(device),
-                                               QMessageBox::Apply | QMessageBox::Retry | QMessageBox::Cancel);
+        logSpace->append("actions");
+
+        QModelIndex index = workSpace->selectionModel()->currentIndex();
+        QAbstractItemModel *model = workSpace->model();
+
+        // collect data
+
+        QList<QStringList>::iterator listIterator = lists.begin();
+
+        for(int j = 0; j < 50; j++)
+        {
+            for(int i = 0; i < adress.size(); i++)
+            {
+                QString s = adress.at(i);
+                tempString.clear();
+                reseaveData.clear();
+
+                QByteArray newdata = s.toLatin1() + f.toLatin1() +'\r';
+                writeData(newdata);
+                QTime timer;
+                timer.start();
+
+                for(int k = 0; k < 3; k++)
+                {
+                    for(;timer.elapsed() < 200;)
+                    {
+                        qApp->processEvents(nullptr);
+                    }
+                    tempString = reseaveData;
+                }
+
+                tempString.remove("\r");
+                tempString.remove("\n");
+                logSpace->append(s + ": "+ tempString);
+
+                (*listIterator).append(tempString);
+
+                listIterator++;
+
+                if(i == adress.size())
+                {
+                    listIterator = lists.begin();
+                }
+            }
+        }
+
+
+//        // setting data
+//        for(int i = 0; i < srals.size(); i++)
+//        {
+//            if (model->columnCount(index) == 0)
+//            {
+//                if (!model->insertColumn(0, index))
+//                    return;
+//            }
+
+//            if (!model->insertRow(0, index))
+//                return;
+
+//            inputTest.m_fileName = srals.at(i);
+
+//            QModelIndex child1 = model->index(0, 0, index);
+//            model->setData(child1, QVariant(srals.at(i)), Qt::EditRole);
+
+//            QVariant variant = QVariant::fromValue(inputTest.m_fileName);
+//            model->setData(child1, variant);
+
+//            QModelIndex child2 = model->index(0, 1, index);
+//            model->setData(child2, QVariant(nowDate), Qt::EditRole);
+
+//            QModelIndex child3 = model->index(0, 2, index);
+//            model->setData(child3, QVariant(nowTime), Qt::EditRole);
+
+//            logSpace->append("------------------Input test data--------------------------------------");
+//            logSpace->append(inputTest.m_directory);
+//            logSpace->append(inputTest.m_fileName);
+//            logSpace->append(inputTest.m_testName);
+//            if(!inputTest.m_logData.isEmpty())
+//            logSpace->append(inputTest.m_logData.first());
+//            logSpace->append("------------------Input test data--------------------------------------");
+
+//            inputTest.cleanData();
+
+//            childs.push_front(child1);
+//        }
+//         // setting data
+
+
+
+
+
 
 
 //        bool select;
