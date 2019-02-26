@@ -3,7 +3,9 @@
 #include <QList>
 #include <QVector>
 
-Plot::Plot(QWidget *parent) : QWidget(parent),
+int Plot::plotCount = 0;
+
+Plot::Plot(QString name, QWidget *parent) : QWidget(parent),
     ui(new Ui::Plot)
 {
     srand(QDateTime::currentDateTime().toTime_t());
@@ -15,7 +17,7 @@ Plot::Plot(QWidget *parent) : QWidget(parent),
     ui->customPlot->axisRect()->setupFullAxesBox();
 
     ui->customPlot->plotLayout()->insertRow(0);
-    QCPTextElement *title = new QCPTextElement(ui->customPlot, "Signal visualization", QFont("sans", 13, QFont::Bold));
+    QCPTextElement *title = new QCPTextElement(ui->customPlot, name, QFont("sans", 13, QFont::Bold));
     ui->customPlot->plotLayout()->addElement(0, 0, title);
 
     ui->customPlot->xAxis->setLabel("АDC counts");
@@ -54,7 +56,8 @@ Plot::Plot(QWidget *parent) : QWidget(parent),
     // setup policy and connect slot for context menu popup:
     ui->customPlot->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->customPlot, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
-
+    plotCount++;
+    qDebug() << plotCount << endl;
 
 }
 
@@ -64,9 +67,10 @@ Plot::Plot(QWidget *parent) : QWidget(parent),
 
 Plot::~Plot()
 {
+    plotCount--;
+    qDebug() << plotCount << endl;
     delete ui;
 }
-
 
 
 void Plot::titleDoubleClick(QMouseEvent* event)

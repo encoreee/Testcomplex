@@ -22,13 +22,17 @@ enum Styles
 
 class Plot : public QWidget
 {
+
+
         Q_OBJECT
 
     public:
-        explicit Plot(QWidget *parent = nullptr);
+        explicit Plot(QString name = "Signal visualization" ,QWidget *parent = nullptr );
         ~Plot();
         void addGraph(const QList<double> keys, const QList<double> values, Styles style, QString graphName);
-        static int getPlotCount();
+        int getPlotCount(){
+            return plotCount;
+        }
 
     private slots:
       void titleDoubleClick(QMouseEvent *event);
@@ -47,6 +51,7 @@ class Plot : public QWidget
 
     private:
         Ui::Plot *ui;
+        static int plotCount;
 
 };
 

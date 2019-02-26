@@ -17,6 +17,9 @@
 #include <QThread>
 #include <QModelIndexList>
 #include <QPair>
+#include <QProgressBar>
+#include <QDir>
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
      m_settings(new SettingsDialog),
@@ -322,93 +325,110 @@ void MainWindow::createTest()
 
 void MainWindow::makeTest()
 {
+    tab_2->clearGraphs();
+    tab_1->clear();
+
     QModelIndex selectedIndex = workSpace->selectionModel()->currentIndex();
     QAbstractItemModel *model = workSpace->model();
-    QVector<double> snrsUs;
-    QVector<double> snrsUref;
+    QString testname = model->data(selectedIndex, Qt::EditRole).toString();
 
-    int row = 0; int colomn = 0;
-
-    while (selectedIndex.child(row,colomn).isValid())
+    if(testname == "SNR")
     {
-        QModelIndex childindex = selectedIndex.child(row,colomn);
+        QVector<QString> serialNumbers;
+        QVector<double> snrsUs;
+        QVector<double> snrsUref;
 
-        workSpace->setCurrentIndex(childindex);
-        model->data(childindex, Qt::EditRole);
-        getData();
-      //  testWroteDate(); // Debug, dont forget to remove
-        QPair<double,double> snrs = calculateSNR();
+        int row = 0; int colomn = 0;
 
-        if (snrs.first != NULL && snrs.second != NULL)
+        while (selectedIndex.child(row,colomn).isValid())
         {
-            snrsUs.append(snrs.first);
-            snrsUref.append(snrs.second);
+            QModelIndex childindex = selectedIndex.child(row,colomn);
+            workSpace->setCurrentIndex(childindex);
+            model->data(childindex, Qt::EditRole);
+            getData();
+            serialNumbers.append(outputTest.m_fileName);
+          //  testWroteDate(); // Debug, dont forget to remove
+            QPair<double,double> snrs = calculateSNR();
+
+            if (snrs.first != NULL && snrs.second != NULL)
+            {
+                snrsUs.append(snrs.first);
+                snrsUref.append(snrs.second);
+
+            }
+
+            row++;
+            QTime timer;
+            timer.start ();
+
+            for(;timer.elapsed() < 300;)
+            {
+                qApp->processEvents(nullptr);
+            }
+            outputTest.cleanData();
+
         }
 
-        row++;
-        QTime timer;
-        timer.start ();
-        for(;timer.elapsed() < 300;)
-                    {
-                       qApp->processEvents(nullptr);
-                    }
-        outputTest.cleanData();
+        QVector<double> keys;
 
+        for (int i = 1; i < snrsUs.size()+1; i++)
+        {
+            keys.append(static_cast<double>(i));
+        }
+
+        double minSnrsUs = *std::min_element(snrsUs.begin(), snrsUs.end());
+        double minSnrsUref = *std::min_element(snrsUref.begin(), snrsUref.end());
+
+        double maxSnrsUs = *std::max_element(snrsUs.begin(), snrsUs.end());
+        double maxSnrsUref = *std::max_element(snrsUref.begin(), snrsUref.end());
+        QPen graphPen;
+
+
+
+        tab_2->addGraph();
+        tab_2->graph()->setData(keys,snrsUs);
+        graphPen.setColor(QColor(255, 0, 0, 127));
+        graphPen.setWidthF(2);
+        tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
+        tab_2->graph()->setPen(graphPen);
+        tab_2->replot();
+
+        tab_2->addGraph();
+        tab_2->graph()->setData(keys,snrsUref);
+        graphPen.setColor(QColor(0, 0, 255, 127));
+        graphPen.setWidthF(2);
+        tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
+        tab_2->graph()->setPen(graphPen);
+        tab_2->replot();
+
+        tab_2->xAxis->setLabel("Sensors");
+        tab_2->yAxis->setLabel("Signal to noise");
+
+        tab_2->xAxis->setRange(0, snrsUs.size()+1);
+
+        tab_2->yAxis->setRange((minSnrsUs < minSnrsUref ? minSnrsUs : minSnrsUref) - 1 , (maxSnrsUs > maxSnrsUref ? maxSnrsUs : maxSnrsUref) + 1);
+
+        tab_2->replot();
+
+        tab_1->setRowCount(snrsUs.size()+5);
+        tab_1->setColumnCount(5);
+
+        tab_1->setItem(0,0,new QTableWidgetItem(QString("S/N")));
+        tab_1->setItem(0,1,new QTableWidgetItem(QString("SNR in Us canal")));
+        tab_1->setItem(0,2,new QTableWidgetItem(QString("SNR in Uref canal")));
+
+        for (int i = 0, j = 1; i < snrsUs.size(); i++, j++)
+        {
+            tab_1->setItem(j,0,new QTableWidgetItem(QString("%1").arg(serialNumbers[i])));
+            tab_1->setItem(j,1,new QTableWidgetItem(QString("%1").arg(snrsUs[i])));
+            tab_1->setItem(j,2,new QTableWidgetItem(QString("%1").arg(snrsUref[i])));
+        }
+
+        workSpace->selectionModel()->clearSelection();
+        workSpace->selectionModel()->reset();
     }
-
-    QVector<double> keys;
-
-    for (int i = 1; i < snrsUs.size()+1; i++)
-    {
-        keys.append(static_cast<double>(i));
-    }
-
-    double minSnrsUs = *std::min_element(snrsUs.begin(), snrsUs.end());
-    double minSnrsUref = *std::min_element(snrsUref.begin(), snrsUref.end());
-
-    double maxSnrsUs = *std::max_element(snrsUs.begin(), snrsUs.end());
-    double maxSnrsUref = *std::max_element(snrsUref.begin(), snrsUref.end());
-    QPen graphPen;
-
-    tab_2->addGraph();
-    tab_2->graph()->setData(keys,snrsUs);
-    graphPen.setColor(QColor(255, 0, 0, 127));
-    graphPen.setWidthF(2);
-    tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
-    tab_2->graph()->setPen(graphPen);
-    tab_2->replot();
-
-    tab_2->addGraph();
-    tab_2->graph()->setData(keys,snrsUref);
-    graphPen.setColor(QColor(0, 0, 255, 127));
-    graphPen.setWidthF(2);
-    tab_2->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ScatterShape::ssCircle));
-    tab_2->graph()->setPen(graphPen);
-    tab_2->replot();
-
-    tab_2->xAxis->setLabel("Sensors");
-    tab_2->yAxis->setLabel("Signal to noise");
-
-    tab_2->xAxis->setRange(0, snrsUs.size()+1);
-
-    tab_2->yAxis->setRange((minSnrsUs < minSnrsUref ? minSnrsUs : minSnrsUref) - 1 , (maxSnrsUs > maxSnrsUref ? maxSnrsUs : maxSnrsUref) + 1);
-
-    tab_2->replot();
-
-    tab_1->setRowCount(snrsUs.size()+5);
-    tab_1->setColumnCount(5);
-
-    tab_1->setItem(0,0,new QTableWidgetItem(QString("SNR in Us canal")));
-    tab_1->setItem(0,1,new QTableWidgetItem(QString("SNR in Us canal")));
-
-    for (int i = 0, j = 1; i < snrsUs.size(); i++, j++)
-    {
-        tab_1->setItem(j,0,new QTableWidgetItem(QString("%1").arg(snrsUs[i])));
-        tab_1->setItem(j,1,new QTableWidgetItem(QString("%1").arg(snrsUref[i])));
-    }
-
-    workSpace->selectionModel()->clearSelection();
-    workSpace->selectionModel()->reset();
+    else
+         QMessageBox::information(this,"Attention","Test is not selected");
 }
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
@@ -632,9 +652,9 @@ void MainWindow::readLogFiles()
 {
 
     QStringList files = QFileDialog::getOpenFileNames(this,
-                                QString::fromUtf8("Выберите один, или более файлов"),
+                                QString::fromUtf8("Select one, or more files"),
                                 QDir::currentPath(),
-                                "Images (*.txt);;All files (*.*)");
+                                "rowdata (*.txt);;All files (*.*)");
     for(QString path : files)
     {
         QFile logFile (path);
@@ -717,7 +737,7 @@ void MainWindow::readLogFiles()
             logSpace->append(inputTest.m_testName);
             if(!inputTest.m_logData.isEmpty())
             logSpace->append(inputTest.m_logData.first());
-              logSpace->append("------------------Input test data--------------------------------------");
+            logSpace->append("------------------Input test data--------------------------------------");
 
 
 
@@ -743,20 +763,7 @@ void MainWindow::readLogFiles()
                 QModelIndex child3 = model->index(0, 2, index);
                 model->setData(child3, QVariant(nowTime), Qt::EditRole);
 
-                getData();
-
-                logSpace->append("------------------Output test data--------------------------------------");
-                logSpace->append(outputTest.m_directory);
-                logSpace->append(outputTest.m_fileName);
-                logSpace->append(outputTest.m_testName);
-                if(!outputTest.m_logData.isEmpty())
-                logSpace->append(outputTest.m_logData.first());
-                logSpace->append("------------------Output test data--------------------------------------");
-
-
-
-
-
+                inputTest.cleanData();
 
 //            QVariant variant = QVariant::fromValue(temptest);
 //            model->setData(index, variant);
@@ -1192,7 +1199,7 @@ void MainWindow::collectLogDataFromDevice()
             QTime timer;
             timer.start();
 
-            for(;timer.elapsed() < 1200;)
+            for(;timer.elapsed() < 700;)
             {
                 qApp->processEvents(nullptr);
             }
@@ -1223,15 +1230,15 @@ void MainWindow::collectLogDataFromDevice()
                 writeData(newdata);
                 timer.restart();
 
-                for(int i = 0; i < 3; i++)
-                {
-                    for(;timer.elapsed() < 200;)
+
+                for(;timer.elapsed() < 400;)
                     {
                         qApp->processEvents(nullptr);
                     }
                     tempString = reseaveData;
-                }
-
+                    tempString.replace("\t"," ");
+                    tempString.remove("\n");
+                    tempString.remove("\r");
 
                     if(!(tempString  == "") && !tempString.isEmpty() && !(tempString == "FAL\r"))
                     {
@@ -1250,8 +1257,7 @@ void MainWindow::collectLogDataFromDevice()
                                                    QMessageBox::Apply | QMessageBox::Retry | QMessageBox::Cancel);
 
 
-            activAdress.clear();
-            checkedSensors.clear();
+
 
             if (question == QMessageBox::Cancel){
                 return;
@@ -1260,6 +1266,10 @@ void MainWindow::collectLogDataFromDevice()
             if (question == QMessageBox::Apply){
                 break;
             }
+
+            activAdress.clear();
+            checkedSensors.clear();
+
         }
         while (true);
 
@@ -1269,16 +1279,33 @@ void MainWindow::collectLogDataFromDevice()
             lists.push_front(data);
         }
 
-        logSpace->append("actions");
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
 
-        QModelIndex index = workSpace->selectionModel()->currentIndex();
-        QAbstractItemModel *model = workSpace->model();
+        logSpace->append("Data collecting started at... ");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+        logSpace->append("\n");
+        logSpace->append("-----------------------------------------------------");
 
         // collect data
 
+        int linesCount = 200;
+        QProgressDialog * progress = new QProgressDialog("Collecting data...", "Cancel", 0, linesCount, this);
+        progress->setWindowFlags (progress->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+        progress->show();
+        progress->setValue(0);
+
+        progress->setMinimum(0);
+        progress->setMaximum(100);
+
+
         QList<QStringList>::iterator listIterator = lists.begin();
 
-        for(int j = 0; j < 50; j++)
+        for(int j = 0; j < linesCount; j++)
         {
             for(int i = 0; i < adress.size(); i++)
             {
@@ -1291,311 +1318,121 @@ void MainWindow::collectLogDataFromDevice()
                 QTime timer;
                 timer.start();
 
-                for(int k = 0; k < 3; k++)
+                for(;timer.elapsed() < 300;)
                 {
-                    for(;timer.elapsed() < 200;)
-                    {
-                        qApp->processEvents(nullptr);
-                    }
-                    tempString = reseaveData;
+                    qApp->processEvents(nullptr);
                 }
 
-                tempString.remove("\r");
+                tempString = reseaveData;
+                tempString.replace("\t"," ");
                 tempString.remove("\n");
-                logSpace->append(s + ": "+ tempString);
+                tempString.remove("\r");
 
-                (*listIterator).append(tempString);
+                if(!tempString.isEmpty())
+                {
+                    (*listIterator).append(tempString);
+                    logSpace->append(s + ": "+ tempString + "was wrote");
+                }
 
                 listIterator++;
 
-                if(i == adress.size())
+                if(i == adress.size()-1)
                 {
                     listIterator = lists.begin();
                 }
+
+                if (progress->wasCanceled())
+                    return;
+            }
+            float persents = (static_cast<float>(j)/linesCount)*100;
+            qDebug() << progress;
+            progress->setValue(static_cast<int>(persents));
+        }
+
+        progress->setValue(100);
+        QTime timer;
+        timer.start();
+        for(;timer.elapsed() < 3000;)
+        {
+            qApp->processEvents(nullptr);
+        }
+        progress->hide();
+
+        QModelIndex index = workSpace->selectionModel()->currentIndex();
+        QAbstractItemModel *model = workSpace->model();
+
+        // setting data
+        for(int i = 0; i < srals.size(); i++)
+        {
+            if(srals.size() == lists.size())
+            {
+                if (model->columnCount(index) == 0)
+                {
+                    if (!model->insertColumn(0, index))
+                        return;
+                }
+
+                if (!model->insertRow(0, index))
+                    return;
+
+                nowDateTime = QDateTime::currentDateTime();
+                Date = nowDateTime.date();
+                Time = nowDateTime.time();
+                nowDate = Date.toString("dd.MM.yy");
+                nowTime = Time.toString("hh:mm:ss");
+
+
+                QString path = QDir::homePath();
+                inputTest.m_fileName = srals.at(i);
+                inputTest.m_logData = lists.at(i);
+                inputTest.m_directory = path;
+                inputTest.m_testName = srals.at(i);
+                inputTest.m_readingDateTime = nowDateTime;
+
+                QModelIndex child1 = model->index(0, 0, index);
+                model->setData(child1, QVariant(inputTest.m_fileName), Qt::EditRole);
+
+                QVariant variant = QVariant::fromValue(inputTest);
+                model->setData(child1, variant);
+
+                QModelIndex child2 = model->index(0, 1, index);
+                model->setData(child2, QVariant(nowDate), Qt::EditRole);
+
+                QModelIndex child3 = model->index(0, 2, index);
+                model->setData(child3, QVariant(nowTime), Qt::EditRole);
+
+                inputTest.cleanData();
+
+           //     childs.push_front(child1);
+            }
+            else
+            {
+                 QMessageBox::information(this,"Attention","Сontainer error");
             }
         }
 
+        nowDateTime = QDateTime::currentDateTime();
+        Date = nowDateTime.date();
+        Time = nowDateTime.time();
+        nowDate = Date.toString("dd.MM.yy");
+        nowTime = Time.toString("hh:mm:ss");
 
-//        // setting data
-//        for(int i = 0; i < srals.size(); i++)
-//        {
-//            if (model->columnCount(index) == 0)
-//            {
-//                if (!model->insertColumn(0, index))
-//                    return;
-//            }
+        logSpace->append("Data collecting finished at... ");
+        logSpace->append(nowDate);
+        logSpace->append(nowTime);
+        logSpace->append("\n");
+        logSpace->append("-----------------------------------------------------");
 
-//            if (!model->insertRow(0, index))
-//                return;
-
-//            inputTest.m_fileName = srals.at(i);
-
-//            QModelIndex child1 = model->index(0, 0, index);
-//            model->setData(child1, QVariant(srals.at(i)), Qt::EditRole);
-
-//            QVariant variant = QVariant::fromValue(inputTest.m_fileName);
-//            model->setData(child1, variant);
-
-//            QModelIndex child2 = model->index(0, 1, index);
-//            model->setData(child2, QVariant(nowDate), Qt::EditRole);
-
-//            QModelIndex child3 = model->index(0, 2, index);
-//            model->setData(child3, QVariant(nowTime), Qt::EditRole);
-
-//            logSpace->append("------------------Input test data--------------------------------------");
-//            logSpace->append(inputTest.m_directory);
-//            logSpace->append(inputTest.m_fileName);
-//            logSpace->append(inputTest.m_testName);
-//            if(!inputTest.m_logData.isEmpty())
-//            logSpace->append(inputTest.m_logData.first());
-//            logSpace->append("------------------Input test data--------------------------------------");
-
-//            inputTest.cleanData();
-
-//            childs.push_front(child1);
-//        }
-//         // setting data
-
-
-
-
-
-
-
-//        bool select;
-//        QString testName = QInputDialog::getText(nullptr,
-//                                                 "Enter logfile name",
-//                                                 "Name:",
-//                                                 QLineEdit::Normal,
-//                                                 "MyLogFile",
-//                                                 &select);
-//        inputTest.setTestName(testName);
-
-//        if (!select)     // Если была нажата кнопка Cancel
-//        {
-//            testName = "Log File" + QString::number(++logFileID);
-//            inputTest.setTestName(testName);
-//        }
-
-
-
-//        writeData(newdata);
-//        QTime timer;
-//        timer.start();
-
-//        for(;timer.elapsed() < 500;)
-//        {
-//            qApp->processEvents(nullptr);
-//        }
-
-
-//        QString filename = inputTest.m_fileName = tempString;
-//        filename.remove("\r");
-//        nowDateTime = QDateTime::currentDateTime();
-//        inputTest.m_readingDateTime = nowDateTime;
-
-
-
-//        QString PathName = QFileDialog::getSaveFileName(this, tr("Save logfile"),
-//                                                        filename,
-//                                                        tr("logfile (*.txt);;All Files (*)"));
-
-//        QFile file (PathName);
-//        bool open = file.open(QIODevice::WriteOnly | QIODevice::Text);
-//        if (!open)
-//        qDebug() << "file not opened";
-
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("Collecting data started at... ");
-//        nowDateTime = QDateTime::currentDateTime();
-//        Date = nowDateTime.date();
-//        Time = nowDateTime.time();
-//        nowDate = Date.toString("dd.MM.yy");
-//        nowTime = Time.toString("hh:mm:ss");
-//        logSpace->append(nowDate);
-//        logSpace->append(nowTime);
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("\n");
-
-//        QStringList serialList;
-//        QTextStream stream(&file);
-//        testPerforming = true;
-//        for(int i = 0;; i++)
-//            {
-//            QMainWindow::statusBar()->showMessage
-//                    (tr("The test is performing, set cursor on command line and press ESC to STOP."
-//                        " Cycle %1 is going").arg(i));
-//                newdata = F.toLatin1() + '\r';
-//                writeData(newdata);
-//                QTime timer;
-//                timer.start () ;
-//                for(;timer.elapsed() < 300;)
-//                    {
-//                        qApp->processEvents(nullptr);
-//                    }
-//                tempString = reseaveData;
-//                serialList << tempString;
-//                stream << tempString;
-//                qDebug() << tempString << "was wrote.";
-//                if(breakingPoint)
-//                    break;
-//                qApp->processEvents(nullptr);
-//            }
-//            breakingPoint = false;
-
-//            file.close();
-//            if (stream.status() != QTextStream::Ok)
-//            {
-//                qDebug() << "Ошибка записи файла";
-//            }
-
-//        QList<QString>::iterator serialListIterator;
-
-//        for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
-//                {
-//                   int n = (*serialListIterator).size();
-//                   if (n < 5)
-//                       {
-//                           serialList.erase(serialListIterator);
-//                       }
-//                   (*serialListIterator).remove("\n");
-//                   (*serialListIterator).remove("\r");
-//                   (*serialListIterator).replace("\t"," ");
-
-//                   logSpace->append(*serialListIterator);
-//                   logSpace->append("cleaned");
-//                }
-//        inputTest.m_logData = serialList;
-
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("Test finished at... ");
-//        nowDateTime = QDateTime::currentDateTime();
-//        Date = nowDateTime.date();
-//        Time = nowDateTime.time();
-//        nowDate = Date.toString("dd.MM.yy");
-//        nowTime = Time.toString("hh:mm:ss");
-//        logSpace->append(nowDate);
-//        logSpace->append(nowTime);
-//        logSpace->append("------------------------------------------------------------------");
-//        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created, %1 cycles was wrote.")
-//                                              .arg(serialList.size()),5000);
-//        testPerforming = false;
-//    }
-//    else if (question == QMessageBox::No)
-//    {
-
-//        bool select;
-//        QString testName = QInputDialog::getText(nullptr,
-//                                                 "Enter logfile name",
-//                                                 "Name:",
-//                                                 QLineEdit::Normal,
-//                                                 "MyLogFile",
-//                                                 &select);
-//        inputTest.setTestName(testName);
-
-//        if (!select)     // Если была нажата кнопка Cancel
-//        {
-//            testName = "Log File" + QString::number(++logFileID);
-//            inputTest.setTestName(testName);
-//        }
-
-//        QString sral = "SRAL?";
-//        QString F ="F";
-//        QByteArray newdata = sral.toLatin1() + '\r';
-//        writeData(newdata);
-//        QTime timer;
-//        timer.start();
-
-//        for(;timer.elapsed() < 1000;)
-//        {
-//            qApp->processEvents(nullptr);
-//        }
-
-//        tempString = reseaveData;
-//        QString filename = tempString;
-//        filename.remove("\r");
-//        filename.append(".txt");
-//        inputTest.m_fileName = filename;
-//        nowDateTime = QDateTime::currentDateTime();
-//        inputTest.m_readingDateTime = nowDateTime;
-
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("Collecting data started at... ");
-//        nowDateTime = QDateTime::currentDateTime();
-//        Date = nowDateTime.date();
-//        Time = nowDateTime.time();
-//        nowDate = Date.toString("dd.MM.yy");
-//        nowTime = Time.toString("hh:mm:ss");
-//        logSpace->append(nowDate);
-//        logSpace->append(nowTime);
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("\n");
-
-//        QStringList serialList;
-
-//        testPerforming = true;
-//        for(int i = 0;; i++)
-//            {
-//            QMainWindow::statusBar()->showMessage
-//                    (tr("The test is performing, set cursor on command line and press ESC to STOP."
-//                        " Cycle %1 is going").arg(i));
-//                newdata = F.toLatin1() + '\r';
-//                writeData(newdata);
-//                QTime timer;
-//                timer.start () ;
-//                for(;timer.elapsed() < 300;)
-//                    {
-//                        qApp->processEvents(nullptr);
-//                    }
-//                tempString = reseaveData;
-//                serialList << tempString;
-
-//                qDebug() << tempString << "was wrote.";
-//                if(breakingPoint)
-//                    break;
-//                qApp->processEvents(nullptr);
-//            }
-//            breakingPoint = false;
-
-//        QList<QString>::iterator serialListIterator;
-
-//        for (serialListIterator = serialList.begin(); serialListIterator != serialList.end(); ++serialListIterator)
-//                {
-//                   int n = (*serialListIterator).size();
-//                   if (n < 5)
-//                       {
-//                           serialList.erase(serialListIterator);
-//                       }
-//                   (*serialListIterator).remove("\n");
-//                   (*serialListIterator).remove("\r");
-//                   (*serialListIterator).replace("\t"," ");
-
-//                   logSpace->append(*serialListIterator);
-//                   logSpace->append("cleaned");
-//                }
-//        inputTest.m_logData = serialList;
-//        logSpace->append("------------------------------------------------------------------");
-//        logSpace->append("Collecting data finished at... ");
-//        nowDateTime = QDateTime::currentDateTime();
-//        Date = nowDateTime.date();
-//        Time = nowDateTime.time();
-//        nowDate = Date.toString("dd.MM.yy");
-//        nowTime = Time.toString("hh:mm:ss");
-//        logSpace->append(nowDate);
-//        logSpace->append(nowTime);
-//        logSpace->append("------------------------------------------------------------------");
-//        QMainWindow::statusBar()->showMessage(tr("The data is setted, logfile is created, %1 cycles was wrote.")
-//                                              .arg(serialList.size()),5000);
-//        testPerforming = false;
-//    }
-//    else
-//    {
-//        QMainWindow::statusBar()->showMessage(tr("Serial port is not initialized"),5000);
-//        qDebug() << "Canceled";
-//    }
+        workSpace->setExpanded(index, true);
+        resizeColumn();
+        updateActions();
+        workSpace->selectionModel()->clearSelection();
+        workSpace->selectionModel()->reset();
+        // setting data
 
     }
-
+    else
+         QMessageBox::information(this,"Attention","Serial port is not connected");
 }
 
 void MainWindow::writeTestDataToItem(Test temptest)
@@ -1793,17 +1630,23 @@ QPair<double,double> MainWindow::calculateSNR()
         for(int i = 0; i < signalUs.size(); i ++)
             auxiliaryList.append(i);
 
+       QString plotName = QString("signal visualization of sensor s/n %1").arg(outputTest.m_fileName);
 
-            Plot * plot = new Plot() ;
 
-            plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
-            plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
-            plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
-            plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
-            plot->addGraph(auxiliaryList, normUs, STYLE_5, "norm Us");
-            plot->addGraph(auxiliaryList, normUref, STYLE_5, "norm Uref");
+           Plot * plot = new Plot(plotName) ;
 
-            plot->show();
+           plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
+           plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
+           plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
+           plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
+           plot->addGraph(auxiliaryList, normUs, STYLE_5, "norm Us");
+           plot->addGraph(auxiliaryList, normUref, STYLE_5, "norm Uref");
+
+       if(plot->getPlotCount() < 11)
+       {
+           plot->show();
+       }
+
 
         outputTest.cleanData();
         QPair<double,double> snrPair;
