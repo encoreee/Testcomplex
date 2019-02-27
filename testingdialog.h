@@ -51,10 +51,12 @@ private:
     void fillParameters();
     void updateSettings();
     void checkCustomPollingFrequency(int idx);
+    void checkCustomCustomCyclesNumber(int idx);
 
     Ui::TestingDialog *m_testui = nullptr;
     TestSettings m_currentTestSettings;
-    QIntValidator *m_intTestValidator = nullptr;
+    QIntValidator *m_intFrequencyValidator = nullptr;
+    QIntValidator *m_intCyclesNumberVaildator = nullptr;
 
 
 

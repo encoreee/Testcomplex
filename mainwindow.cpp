@@ -1541,163 +1541,159 @@ QPair<double,double> MainWindow::calculateSNR()
 
     if(!outputTest.isEmpty)
     {
-        for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
+        if(!outputTest.m_logData.isEmpty())
         {
-            QString s = (*OTIterator).toLocal8Bit();
-            s.remove(1,0);
-            QStringList slist = s.split(' ');
-            double termoValue = slist.at(0).toLocal8Bit().toDouble();
-            double ratioSValue= slist.at(1).toDouble();
-            double signalUsValue = slist.at(2).toDouble();
-            double signalUrefValue = slist.at(3).toDouble();
+            for (OTIterator = outputTest.m_logData.begin(); OTIterator != outputTest.m_logData.end(); ++OTIterator)
+            {
+                QString s = (*OTIterator).toLocal8Bit();
+                s.remove(1,0);
+                QStringList slist = s.split(' ');
+                double termoValue = slist.at(0).toLocal8Bit().toDouble();
+                double ratioSValue= slist.at(1).toDouble();
+                double signalUsValue = slist.at(2).toDouble();
+                double signalUrefValue = slist.at(3).toDouble();
 
-            termo.append(termoValue);
-            ratioS.append(ratioSValue);
-            signalUs.append(signalUsValue);
-            signalUref.append(signalUrefValue);
+                termo.append(termoValue);
+                ratioS.append(ratioSValue);
+                signalUs.append(signalUsValue);
+                signalUref.append(signalUrefValue);
+            }
+
+            Polyfuntions polinomUs(signalUs, 5);
+            Polyfuntions polinomUref(signalUref, 5);
+
+            QList<double> coefUs = polinomUs.getCoefficients();
+            QList<double> coefUref = polinomUref.getCoefficients();
+
+            logSpace->append("------------------------------------------------------------------");
+            logSpace->append("Debag data:");
+
+            for(double d : coefUs)
+            {
+                logSpace->append(tr("Coefficient Us: %1").arg(d));
+            }
+
+            logSpace->append("");
+
+            for(double d : coefUref)
+            {
+                logSpace->append(tr("Coefficient Uref: %1").arg(d));
+            }
+
+            logSpace->append("");
+
+            QList <double> poliValueUs = polinomUs.getPolinomValues();
+            QList <double> poliValueUref = polinomUref.getPolinomValues();
+
+            double minPolyUs = *std::min_element(poliValueUs.begin(), poliValueUs.end());
+            double minPolyUref = *std::min_element(poliValueUref.begin(), poliValueUref.end());
+
+            logSpace->append(tr("min poly Us: %1").arg(minPolyUs));
+            logSpace->append(tr("min poly Uref: %1").arg(minPolyUref));
+            logSpace->append("");
+
+            QList <double> normUs;
+            QList <double> normUref;
+
+            for(int i = 0; i < signalUs.size(); i++)
+            {
+                normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
+                normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
+            }
+
+            double sumUs = 0;
+            double sumUref = 0;
+
+            for(double normValuesUs : normUs)
+            {
+                sumUs += normValuesUs;
+            }
+
+            for (int i = 0; i < normUref.size(); i++){
+                sumUref = sumUref + normUref.at(i);
+            }
+
+            logSpace->append(tr("sumUs: %1").arg(sumUs));
+            logSpace->append(tr("sumUref: %1").arg(sumUref));
+            logSpace->append("");
+
+            logSpace->append(tr("normUs.size: %1").arg(normUs.size()));
+            logSpace->append(tr("normUref.size: %1").arg(normUref.size()));
+            logSpace->append("");
+
+            double averageNormUs = sumUs/normUs.size();
+            double averageNormUref = sumUref/normUref.size();
+
+            logSpace->append(tr("avarage norm us: %1").arg(averageNormUs));
+            logSpace->append(tr("avarage norm uref: %1").arg(averageNormUref));
+            logSpace->append("");
+
+            double sigmaNumeratorUs;
+            double sigmaNumeratorUref;
+
+            for(double d : normUs)
+            {
+                sigmaNumeratorUs += qPow((d - averageNormUs),2);
+            }
+
+            for(double d : normUref)
+            {
+                sigmaNumeratorUref += qPow((d - averageNormUref),2);
+            }
+
+            double sigmaUs = qSqrt(sigmaNumeratorUs/normUs.size());
+            double sigmaUref = qSqrt(sigmaNumeratorUref/normUref.size());
+
+            logSpace->append(tr("Sigma Us: %1").arg(sigmaUs));
+            logSpace->append(tr("sigmaUref: %1").arg(sigmaUref));
+            logSpace->append("");
+
+            double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
+            double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
+
+            logSpace->append("------------------------------------------------------------------");
+            logSpace->append("Calculated SNR:");
+            logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
+            logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
+            logSpace->append("------------------------------------------------------------------");
+            logSpace->append("");
+
+            QList<double> auxiliaryList;
+            for(int i = 0; i < signalUs.size(); i ++)
+                auxiliaryList.append(i);
+
+            QString plotName = QString("signal visualization of sensor s/n %1").arg(outputTest.m_fileName);
+
+            Plot * plot = new Plot(plotName) ;
+
+            plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
+            plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
+            plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
+            plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
+            plot->addGraph(auxiliaryList, normUs, STYLE_5, "norm Us");
+            plot->addGraph(auxiliaryList, normUref, STYLE_5, "norm Uref");
+
+            if(plot->getPlotCount() < 11)
+            {
+                plot->show();
+            }
+
+            outputTest.cleanData();
+            QPair<double,double> snrPair;
+            snrPair.first = snrValueUs;
+            snrPair.second = snrValueUref;
+
+            return snrPair;
         }
-
-        Polyfuntions polinomUs(signalUs, 5);
-        Polyfuntions polinomUref(signalUref, 5);
-
-        QList<double> coefUs = polinomUs.getCoefficients();
-        QList<double> coefUref = polinomUref.getCoefficients();
-
-        logSpace->append("------------------------------------------------------------------");
-        logSpace->append("Debag data:");
-
-        for(double d : coefUs)
+        else
         {
-            logSpace->append(tr("Coefficient Us: %1").arg(d));
+            QMessageBox::information(this,"Error","No data to processing");
         }
-
-        logSpace->append("");
-
-        for(double d : coefUref)
-        {
-            logSpace->append(tr("Coefficient Uref: %1").arg(d));
-        }
-
-        logSpace->append("");
-
-
-        QList <double> poliValueUs = polinomUs.getPolinomValues();
-        QList <double> poliValueUref = polinomUref.getPolinomValues();
-
-        double minPolyUs = *std::min_element(poliValueUs.begin(), poliValueUs.end());
-        double minPolyUref = *std::min_element(poliValueUref.begin(), poliValueUref.end());
-
-        logSpace->append(tr("min poly Us: %1").arg(minPolyUs));
-        logSpace->append(tr("min poly Uref: %1").arg(minPolyUref));
-        logSpace->append("");
-
-
-        QList <double> normUs;
-        QList <double> normUref;
-
-        for(int i = 0; i < signalUs.size(); i++)
-        {
-            normUs.append((signalUs.at(i)/poliValueUs.at(i)) * minPolyUs);
-            normUref.append((signalUref.at(i)/poliValueUref.at(i)) * minPolyUref);
-        }
-
-        double sumUs = 0;
-        double sumUref = 0;
-
-        for(double normValuesUs : normUs)
-        {
-            sumUs += normValuesUs;
-        }
-
-        for (int i = 0; i < normUref.size(); i++){
-            sumUref = sumUref + normUref.at(i);
-        }
-
-
-
-        logSpace->append(tr("sumUs: %1").arg(sumUs));
-        logSpace->append(tr("sumUref: %1").arg(sumUref));
-        logSpace->append("");
-
-
-        logSpace->append(tr("normUs.size: %1").arg(normUs.size()));
-        logSpace->append(tr("normUref.size: %1").arg(normUref.size()));
-        logSpace->append("");
-
-
-        double averageNormUs = sumUs/normUs.size();
-        double averageNormUref = sumUref/normUref.size();
-
-        logSpace->append(tr("avarage norm us: %1").arg(averageNormUs));
-        logSpace->append(tr("avarage norm uref: %1").arg(averageNormUref));
-        logSpace->append("");
-
-
-        double sigmaNumeratorUs;
-        double sigmaNumeratorUref;
-
-        for(double d : normUs)
-        {
-            sigmaNumeratorUs += qPow((d - averageNormUs),2);
-        }
-
-        for(double d : normUref)
-        {
-            sigmaNumeratorUref += qPow((d - averageNormUref),2);
-        }
-
-        double sigmaUs = qSqrt(sigmaNumeratorUs/normUs.size());
-        double sigmaUref = qSqrt(sigmaNumeratorUref/normUref.size());
-
-        logSpace->append(tr("Sigma Us: %1").arg(sigmaUs));
-        logSpace->append(tr("sigmaUref: %1").arg(sigmaUref));
-        logSpace->append("");
-
-
-        double snrValueUs = 20 * log10(averageNormUs/sigmaUs);
-        double snrValueUref = 20 * log10(averageNormUref/sigmaUref);
-
-        logSpace->append("------------------------------------------------------------------");
-        logSpace->append("Calculated SNR:");
-        logSpace->append(tr("SNR for Us = %1").arg(snrValueUs));
-        logSpace->append(tr("SNR for Uref = %1").arg(snrValueUref));
-        logSpace->append("------------------------------------------------------------------");
-        logSpace->append("");
-
-
-        QList<double> auxiliaryList;
-        for(int i = 0; i < signalUs.size(); i ++)
-            auxiliaryList.append(i);
-
-       QString plotName = QString("signal visualization of sensor s/n %1").arg(outputTest.m_fileName);
-
-
-           Plot * plot = new Plot(plotName) ;
-
-           plot->addGraph(auxiliaryList, signalUs, STYLE_1, "Signal Us");
-           plot->addGraph(auxiliaryList, signalUref, STYLE_2, "Signal Uref");
-           plot->addGraph(auxiliaryList, poliValueUs, STYLE_3, "polinomiac values Us");
-           plot->addGraph(auxiliaryList, poliValueUref, STYLE_4, "polinomiac values Uref");
-           plot->addGraph(auxiliaryList, normUs, STYLE_5, "norm Us");
-           plot->addGraph(auxiliaryList, normUref, STYLE_5, "norm Uref");
-
-       if(plot->getPlotCount() < 11)
-       {
-           plot->show();
-       }
-
-
-        outputTest.cleanData();
-        QPair<double,double> snrPair;
-        snrPair.first = snrValueUs;
-        snrPair.second = snrValueUref;
-
-        return snrPair;
     }
 
     else
     {
-        QMessageBox::information(this,"Attention","No data to processing");
+        QMessageBox::information(this,"Error","No data to processing");
         QPair<double,double> snrPairFault;
         return snrPairFault;
     }

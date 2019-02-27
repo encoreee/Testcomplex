@@ -8,7 +8,8 @@ static const char blankString[] = QT_TRANSLATE_NOOP("SettingsDialog", "N/A");
 TestingDialog::TestingDialog(QWidget *parent) :
     QDialog(parent),
     m_testui(new Ui::TestingDialog),
-    m_intTestValidator(new QIntValidator(0, 4000000, this))
+    m_intFrequencyValidator(new QIntValidator(0, 10000, this)),
+    m_intCyclesNumberVaildator(new QIntValidator(0, 10000, this))
 
 {
      m_testui->setupUi(this);
@@ -16,6 +17,7 @@ TestingDialog::TestingDialog(QWidget *parent) :
      connect(m_testui->createButton, &QPushButton::clicked, this, &TestingDialog::create);
      connect(m_testui->cancelButton, &QPushButton::clicked, this, &TestingDialog::cancel);
      connect(m_testui->frequencyBox,  QOverload<int>::of(&QComboBox::currentIndexChanged), this, &TestingDialog::checkCustomPollingFrequency);
+     connect(m_testui->cyclesBox,  QOverload<int>::of(&QComboBox::currentIndexChanged), this, &TestingDialog::checkCustomCustomCyclesNumber);
      fillParameters();
 }
 
@@ -40,7 +42,6 @@ bool TestingDialog::cancel()
 TestSettings TestingDialog::createTest()
 {
     TestSettings newSettings;
-    newSettings.pollingFrequency = m_testui->frequencyBox->itemData(m_testui->frequencyBox->currentIndex()).toInt();
 
     if (m_testui->frequencyBox->currentIndex() == 13)
     {
@@ -52,11 +53,14 @@ TestSettings TestingDialog::createTest()
     }
 
 
-
-
-
-
-    newSettings.numberOfCycles = m_testui->cyclesBox->itemData(m_testui->cyclesBox->currentIndex()).toInt();
+    if (m_testui->cyclesBox->currentIndex() == 7)
+    {
+        newSettings.numberOfCycles = m_testui->cyclesBox->currentText().toInt();
+    }
+    else
+    {
+       newSettings.numberOfCycles = m_testui->cyclesBox->itemData(m_testui->cyclesBox->currentIndex()).toInt();
+    }
 
     if(m_testui->snrButton->isChecked())
         newSettings.choosenTest = Tests::SNR;
@@ -70,6 +74,18 @@ TestSettings TestingDialog::createTest()
     return newSettings;
 }
 
+void TestingDialog::checkCustomCustomCyclesNumber(int idx)
+{
+    const bool isCustomCyclesNumber = !m_testui->cyclesBox->itemData(idx).isValid();
+    m_testui->cyclesBox->setEditable(isCustomCyclesNumber);
+    if (isCustomCyclesNumber) {
+        m_testui->cyclesBox->clearEditText();
+        QLineEdit *edit = m_testui->cyclesBox->lineEdit();
+        edit->setValidator(m_intCyclesNumberVaildator);
+    }
+
+}
+
 void TestingDialog::checkCustomPollingFrequency(int idx)
 {
     const bool isCustomPollingFrequency = !m_testui->frequencyBox->itemData(idx).isValid();
@@ -77,7 +93,7 @@ void TestingDialog::checkCustomPollingFrequency(int idx)
     if (isCustomPollingFrequency) {
         m_testui->frequencyBox->clearEditText();
         QLineEdit *edit = m_testui->frequencyBox->lineEdit();
-        edit->setValidator(m_intTestValidator);
+        edit->setValidator(m_intFrequencyValidator);
     }
 }
 
