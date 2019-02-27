@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 #include <QDateTime>
+#include "testingdialog.h"
 
 class Test
 {
@@ -22,7 +23,7 @@ class Test
                 m_directory       = othertest.m_directory;
                 m_logData         = othertest.m_logData;
                 m_readingDateTime = othertest.m_readingDateTime;
-
+                m_settings        = othertest.m_settings;
                 return *this;
             }
 
@@ -33,6 +34,7 @@ class Test
                 m_directory       = othertest.m_directory;
                 m_logData         = othertest.m_logData;
                 m_readingDateTime = othertest.m_readingDateTime;
+                m_settings        = othertest.m_settings;
 
                 return *this;
             }
@@ -43,6 +45,7 @@ class Test
         QStringList   m_logData;
         QDateTime     m_readingDateTime;
         bool          isEmpty             = true;
+        TestSettings  m_settings;
 
         void cleanData();
 

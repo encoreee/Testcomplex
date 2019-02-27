@@ -8,6 +8,8 @@ int Plot::plotCount = 0;
 Plot::Plot(QString name, QWidget *parent) : QWidget(parent),
     ui(new Ui::Plot)
 {
+    this->setAttribute(Qt::WA_DeleteOnClose);
+
     srand(QDateTime::currentDateTime().toTime_t());
     ui->setupUi(this);
 
@@ -29,10 +31,10 @@ Plot::Plot(QString name, QWidget *parent) : QWidget(parent),
     ui->customPlot->legend->setSelectedFont(legendFont);
     ui->customPlot->legend->setSelectableParts(QCPLegend::spItems); // legend box shall not be selectable, only legend items
 
-   // addRandomGraph();
+    // addRandomGraph();
     //addRandomGraph();
-  //  addRandomGraph();
-  //  addRandomGraph();
+    //  addRandomGraph();
+    //  addRandomGraph();
     ui->customPlot->rescaleAxes();
 
     // connect slot that ties some axis selections together (especially opposite axes):
@@ -60,9 +62,6 @@ Plot::Plot(QString name, QWidget *parent) : QWidget(parent),
     qDebug() << plotCount << endl;
 
 }
-
-
-
 
 
 Plot::~Plot()
@@ -166,16 +165,16 @@ void Plot::selectionChanged()
 
 void Plot::mousePress()
 {
-  // if an axis is selected, only allow the direction of that axis to be dragged
-  // if no axis is selected, both directions may be dragged
+    // if an axis is selected, only allow the direction of that axis to be dragged
+    // if no axis is selected, both directions may be dragged
 
-  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
-    ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->xAxis->orientation());
-  else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
-    ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->yAxis->orientation());
-  else
-    ui->customPlot->axisRect()->setRangeDrag(Qt::Horizontal|Qt::Vertical);
-}
+    if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
+        ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->xAxis->orientation());
+    else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
+        ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->yAxis->orientation());
+    else
+        ui->customPlot->axisRect()->setRangeDrag(Qt::Horizontal|Qt::Vertical);
+  }
 
 void Plot::mouseWheel()
 {

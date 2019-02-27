@@ -65,7 +65,7 @@
          <widget class="QComboBox" name="comboBox_3"/>
         </item>
         <item row="2" column="1">
-         <widget class="QComboBox" name="comboBox_2"/>
+         <widget class="QComboBox" name="cyclesBox"/>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_2">
@@ -77,7 +77,7 @@
         <item row="2" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Number of cycles</string>
           </property>
          </widget>
         </item>

@@ -260,35 +260,57 @@ void MainWindow::insertRow()
     updateActions();
 }
 
-void MainWindow::insertTest(QString name)
+void MainWindow::insertTest(TestSettings s)
 {
-
     QModelIndex index = workSpace->selectionModel()->currentIndex();
     QAbstractItemModel *model = workSpace->model();
 
     if (!model->insertRow(index.row()+1, index.parent()))
         return;
 
-        nowDateTime = QDateTime::currentDateTime();
-        Date = nowDateTime.date();
-        Time = nowDateTime.time();
-        nowDate = Date.toString("dd.MM.yy");
-        nowTime = Time.toString("hh:mm:ss");
+    nowDateTime = QDateTime::currentDateTime();
+    Date = nowDateTime.date();
+    Time = nowDateTime.time();
+    nowDate = Date.toString("dd.MM.yy");
+    nowTime = Time.toString("hh:mm:ss");
 
-        QModelIndex child = model->index(index.row()+1, 0, index.parent());
-        model->setData(child, QVariant(name), Qt::DisplayRole);
+    QString name;
 
-        child = model->index(index.row()+1, 1, index.parent());
-        model->setData(child, QVariant(nowDate), Qt::DisplayRole);
+    if(s.choosenTest == Tests::SNR)
+    {
+        name = "SNR";
+    }
 
-        child = model->index(index.row()+1, 2, index.parent());
-        model->setData(child, QVariant(nowTime), Qt::DisplayRole);
+    if(s.choosenTest == Tests::WarmingUp)
+    {
+        name = "WarmingUp";
+    }
+
+    if(s.choosenTest == Tests::Crush)
+    {
+        name = "Crush";
+    }
+
+    inputTest.m_settings = s;
+    qDebug() << inputTest.m_settings.pollingFrequency;
+    qDebug() << inputTest.m_settings.numberOfCycles;
+    QModelIndex child = model->index(index.row()+1, 0, index.parent());
+    QVariant variant = QVariant::fromValue(inputTest);
+    model->setData(child, variant);
+
+    model->setData(child, QVariant(name), Qt::DisplayRole);
+
+    child = model->index(index.row()+1, 1, index.parent());
+    model->setData(child, QVariant(nowDate), Qt::DisplayRole);
+
+    child = model->index(index.row()+1, 2, index.parent());
+    model->setData(child, QVariant(nowTime), Qt::DisplayRole);
 
     workSpace->selectionModel()->clearSelection();
     workSpace->selectionModel()->reset();
+
     resizeColumn();
     updateActions();
-
 }
 
 void MainWindow::createTest()
@@ -296,25 +318,28 @@ void MainWindow::createTest()
     m_testSettings->exec();
     if(m_testSettings->result())
     {
-       TestingDialog::TestSettings s = m_testSettings->createTest();
+       TestSettings s = m_testSettings->createTest();
 
-       if(s.choosenTest == TestingDialog::Tests::SNR)
-       {
-           QString name = "SNR";
-           insertTest(name);
-       }
+       insertTest(s);
 
-       if(s.choosenTest == TestingDialog::Tests::WarmingUp)
-       {
-           QString name = "WarmingUp";
-           insertTest(name);
-       }
 
-       if(s.choosenTest == TestingDialog::Tests::Crush)
-       {
-           QString name = "Crush";
-           insertTest(name);
-       }
+//       if(s.choosenTest == Tests::SNR)
+//       {
+//           QString name = "SNR";
+//           insertTest(name);
+//       }
+
+//       if(s.choosenTest == Tests::WarmingUp)
+//       {
+//           QString name = "WarmingUp";
+//           insertTest(name);
+//       }
+
+//       if(s.choosenTest == Tests::Crush)
+//       {
+//           QString name = "Crush";
+//           insertTest(name);
+//       }
 
     }
     else
@@ -1163,276 +1188,288 @@ void MainWindow::collectLogDataFromSensor()
 
 void MainWindow::collectLogDataFromDevice()
 {
+
     inputTest.cleanData(); // Очищаем входной контейнер
-
-    if (m_serial->isOpen())
+    QModelIndex selectedTest = workSpace->selectionModel()->currentIndex();
+    QAbstractItemModel *model = workSpace->model();
+    QString testname = model->data(selectedTest, Qt::EditRole).toString();
+    getData();
+    int cyclesCount = outputTest.m_settings.numberOfCycles;
+    int pollingFrequency = outputTest.m_settings.pollingFrequency;
+    qDebug() << cyclesCount << endl;
+    if(testname == "SNR" || testname == "WarmingUp" || testname == "Crush")
     {
-
-    const QString sral = "SRAL?";
-    const QString f ="F";
-    const QString rev = "REV?";
-
-    QList<QModelIndex> childs;
-
-    QStringList adress;
-    adress << "#00" << "#01"<< "#02"<< "#03"<< "#04"<< "#05"<< "#06"<< "#07"<< "#08"<< "#09"<< "#0A"<< "#0B";
-    QList<QStringList> lists;
-    QStringList activAdress;
-
-
-    QStringList srals;
-
-    QString device;
-    QString deviceFW;
-    QString checkedSensors;
-
-    // initialization
-        do
+        if (m_serial->isOpen())
         {
-            srals.clear();
-            device.clear();
-            deviceFW.clear();
-            checkedSensors.clear();
 
-            QByteArray newdata = rev.toLatin1() + '\r';
-            writeData(newdata);
-            QTime timer;
-            timer.start();
+        const QString sral = "SRAL?";
+        const QString f ="F";
+        const QString rev = "REV?";
 
-            for(;timer.elapsed() < 700;)
+        QList<QModelIndex> childs;
+
+        QStringList adress;
+        adress << "#00" << "#01"<< "#02"<< "#03"<< "#04"<< "#05"<< "#06"<< "#07"<< "#08"<< "#09"<< "#0A"<< "#0B";
+        QList<QStringList> lists;
+        QStringList activAdress;
+
+
+        QStringList srals;
+
+        QString device;
+        QString deviceFW;
+        QString checkedSensors;
+
+        // initialization
+            do
             {
-                qApp->processEvents(nullptr);
-            }
+                srals.clear();
+                device.clear();
+                deviceFW.clear();
+                checkedSensors.clear();
 
-            tempString = reseaveData;
-            deviceFW = tempString;
-            deviceFW.remove("\r");
-            deviceFW.remove("\n");
-
-            if (deviceFW.contains("300100"))
-            {
-                device = "Multiplexor";
-            }
-
-            checkedSensors.clear();
-
-            for(;timer.elapsed() < 1500;)
-            {
-                qApp->processEvents(nullptr);
-            }
-
-            for(QString s : adress)
-            {
-                tempString.clear();
-                reseaveData.clear();
-
-                newdata = s.toLatin1() + sral.toLatin1() +'\r';
-                writeData(newdata);
-                timer.restart();
-
-
-                for(;timer.elapsed() < 400;)
-                    {
-                        qApp->processEvents(nullptr);
-                    }
-                    tempString = reseaveData;
-                    tempString.replace("\t"," ");
-                    tempString.remove("\n");
-                    tempString.remove("\r");
-
-                    if(!(tempString  == "") && !tempString.isEmpty() && !(tempString == "FAL\r"))
-                    {
-                        checkedSensors += "Sensor " + s + " is ok\n";
-                        srals.append(tempString);
-                        activAdress.append(s);
-                    }
-                    else if (tempString  == "" || tempString == "FAL\r" || tempString.isEmpty())
-                    {
-                        checkedSensors += "Sensor " + s + " is not connected\n";
-                    }
-            }
-
-            QMessageBox::StandardButton question = QMessageBox::question(this, QString::fromUtf8("Attention!"),
-                                                   QString("Device %1 was connected.\nSoftware version: %2\n" + checkedSensors).arg(device).arg(deviceFW),
-                                                   QMessageBox::Apply | QMessageBox::Retry | QMessageBox::Cancel);
-
-
-
-
-            if (question == QMessageBox::Cancel){
-                return;
-            }
-
-            if (question == QMessageBox::Apply){
-                break;
-            }
-
-            activAdress.clear();
-            checkedSensors.clear();
-
-        }
-        while (true);
-
-        for(QString s : activAdress)
-        {
-            QStringList data;
-            lists.push_front(data);
-        }
-
-        nowDateTime = QDateTime::currentDateTime();
-        Date = nowDateTime.date();
-        Time = nowDateTime.time();
-        nowDate = Date.toString("dd.MM.yy");
-        nowTime = Time.toString("hh:mm:ss");
-
-        logSpace->append("Data collecting started at... ");
-        logSpace->append(nowDate);
-        logSpace->append(nowTime);
-        logSpace->append("\n");
-        logSpace->append("-----------------------------------------------------");
-
-        // collect data
-
-        int linesCount = 200;
-        QProgressDialog * progress = new QProgressDialog("Collecting data...", "Cancel", 0, linesCount, this);
-        progress->setWindowFlags (progress->windowFlags() & ~Qt::WindowContextHelpButtonHint);
-        progress->show();
-        progress->setValue(0);
-
-        progress->setMinimum(0);
-        progress->setMaximum(100);
-
-
-        QList<QStringList>::iterator listIterator = lists.begin();
-
-        for(int j = 0; j < linesCount; j++)
-        {
-            for(int i = 0; i < adress.size(); i++)
-            {
-                QString s = adress.at(i);
-                tempString.clear();
-                reseaveData.clear();
-
-                QByteArray newdata = s.toLatin1() + f.toLatin1() +'\r';
+                QByteArray newdata = rev.toLatin1() + '\r';
                 writeData(newdata);
                 QTime timer;
                 timer.start();
 
-                for(;timer.elapsed() < 300;)
+                for(;timer.elapsed() < 700;)
                 {
                     qApp->processEvents(nullptr);
                 }
 
                 tempString = reseaveData;
-                tempString.replace("\t"," ");
-                tempString.remove("\n");
-                tempString.remove("\r");
+                deviceFW = tempString;
+                deviceFW.remove("\r");
+                deviceFW.remove("\n");
 
-                if(!tempString.isEmpty())
+                if (deviceFW.contains("300100"))
                 {
-                    (*listIterator).append(tempString);
-                    logSpace->append(s + ": "+ tempString + "was wrote");
+                    device = "Multiplexor";
                 }
 
-                listIterator++;
+                checkedSensors.clear();
 
-                if(i == adress.size()-1)
+                for(;timer.elapsed() < 1500;)
                 {
-                    listIterator = lists.begin();
+                    qApp->processEvents(nullptr);
                 }
 
-                if (progress->wasCanceled())
+                for(QString s : adress)
+                {
+                    tempString.clear();
+                    reseaveData.clear();
+
+                    newdata = s.toLatin1() + sral.toLatin1() +'\r';
+                    writeData(newdata);
+                    timer.restart();
+
+
+                    for(;timer.elapsed() < 400;)
+                        {
+                            qApp->processEvents(nullptr);
+                        }
+                        tempString = reseaveData;
+                        tempString.replace("\t"," ");
+                        tempString.remove("\n");
+                        tempString.remove("\r");
+
+                        if(!(tempString  == "") && !tempString.isEmpty() && !(tempString == "FAL\r"))
+                        {
+                            checkedSensors += "Sensor " + s + " is ok\n";
+                            srals.append(tempString);
+                            activAdress.append(s);
+                        }
+                        else if (tempString  == "" || tempString == "FAL\r" || tempString.isEmpty())
+                        {
+                            checkedSensors += "Sensor " + s + " is not connected\n";
+                        }
+                }
+
+                QMessageBox::StandardButton question = QMessageBox::question(this, QString::fromUtf8("Attention!"),
+                                                       QString("Device %1 was connected.\nSoftware version: %2\n" + checkedSensors).arg(device).arg(deviceFW),
+                                                       QMessageBox::Apply | QMessageBox::Retry | QMessageBox::Cancel);
+
+
+
+
+                if (question == QMessageBox::Cancel){
                     return;
+                }
+
+                if (question == QMessageBox::Apply){
+                    break;
+                }
+
+                activAdress.clear();
+                checkedSensors.clear();
+
             }
-            float persents = (static_cast<float>(j)/linesCount)*100;
-            qDebug() << progress;
-            progress->setValue(static_cast<int>(persents));
-        }
+            while (true);
 
-        progress->setValue(100);
-        QTime timer;
-        timer.start();
-        for(;timer.elapsed() < 3000;)
-        {
-            qApp->processEvents(nullptr);
-        }
-        progress->hide();
-
-        QModelIndex index = workSpace->selectionModel()->currentIndex();
-        QAbstractItemModel *model = workSpace->model();
-
-        // setting data
-        for(int i = 0; i < srals.size(); i++)
-        {
-            if(srals.size() == lists.size())
+            for(QString s : activAdress)
             {
-                if (model->columnCount(index) == 0)
+                QStringList data;
+                lists.push_front(data);
+            }
+
+            nowDateTime = QDateTime::currentDateTime();
+            Date = nowDateTime.date();
+            Time = nowDateTime.time();
+            nowDate = Date.toString("dd.MM.yy");
+            nowTime = Time.toString("hh:mm:ss");
+
+            logSpace->append("Data collecting started at... ");
+            logSpace->append(nowDate);
+            logSpace->append(nowTime);
+            logSpace->append("\n");
+            logSpace->append("-----------------------------------------------------");
+
+            // collect data
+
+
+            QProgressDialog * progress = new QProgressDialog("Collecting data...", "Cancel", 0, cyclesCount, this);
+            progress->setWindowFlags (progress->windowFlags() & ~Qt::WindowContextHelpButtonHint);
+            progress->show();
+            progress->setValue(0);
+
+            progress->setMinimum(0);
+            progress->setMaximum(100);
+
+
+            QList<QStringList>::iterator listIterator = lists.begin();
+
+            for(int j = 0; j < cyclesCount; j++)
+            {
+                for(int i = 0; i < adress.size(); i++)
                 {
-                    if (!model->insertColumn(0, index))
+                    QString s = adress.at(i);
+                    tempString.clear();
+                    reseaveData.clear();
+
+                    QByteArray newdata = s.toLatin1() + f.toLatin1() +'\r';
+                    writeData(newdata);
+                    QTime timer;
+                    timer.start();
+
+                    for(;timer.elapsed() < pollingFrequency;)
+                    {
+                        qApp->processEvents(nullptr);
+                    }
+
+                    tempString = reseaveData;
+                    tempString.replace("\t"," ");
+                    tempString.remove("\n");
+                    tempString.remove("\r");
+
+                    if(!tempString.isEmpty())
+                    {
+                        (*listIterator).append(tempString);
+                        logSpace->append(s + ": "+ tempString + "was wrote");
+                    }
+
+                    listIterator++;
+
+                    if(i == adress.size()-1)
+                    {
+                        listIterator = lists.begin();
+                    }
+
+                    if (progress->wasCanceled())
                         return;
                 }
-
-                if (!model->insertRow(0, index))
-                    return;
-
-                nowDateTime = QDateTime::currentDateTime();
-                Date = nowDateTime.date();
-                Time = nowDateTime.time();
-                nowDate = Date.toString("dd.MM.yy");
-                nowTime = Time.toString("hh:mm:ss");
-
-
-                QString path = QDir::homePath();
-                inputTest.m_fileName = srals.at(i);
-                inputTest.m_logData = lists.at(i);
-                inputTest.m_directory = path;
-                inputTest.m_testName = srals.at(i);
-                inputTest.m_readingDateTime = nowDateTime;
-
-                QModelIndex child1 = model->index(0, 0, index);
-                model->setData(child1, QVariant(inputTest.m_fileName), Qt::EditRole);
-
-                QVariant variant = QVariant::fromValue(inputTest);
-                model->setData(child1, variant);
-
-                QModelIndex child2 = model->index(0, 1, index);
-                model->setData(child2, QVariant(nowDate), Qt::EditRole);
-
-                QModelIndex child3 = model->index(0, 2, index);
-                model->setData(child3, QVariant(nowTime), Qt::EditRole);
-
-                inputTest.cleanData();
-
-           //     childs.push_front(child1);
+                float persents = (static_cast<float>(j)/cyclesCount)*100;
+                qDebug() << progress;
+                progress->setValue(static_cast<int>(persents));
             }
-            else
+
+            progress->setValue(100);
+            QTime timer;
+            timer.start();
+            for(;timer.elapsed() < 3000;)
             {
-                 QMessageBox::information(this,"Attention","Сontainer error");
+                qApp->processEvents(nullptr);
             }
+            progress->hide();
+
+            QModelIndex index = workSpace->selectionModel()->currentIndex();
+            QAbstractItemModel *model = workSpace->model();
+
+            // setting data
+            for(int i = 0; i < srals.size(); i++)
+            {
+                if(srals.size() == lists.size())
+                {
+                    if (model->columnCount(index) == 0)
+                    {
+                        if (!model->insertColumn(0, index))
+                            return;
+                    }
+
+                    if (!model->insertRow(0, index))
+                        return;
+
+                    nowDateTime = QDateTime::currentDateTime();
+                    Date = nowDateTime.date();
+                    Time = nowDateTime.time();
+                    nowDate = Date.toString("dd.MM.yy");
+                    nowTime = Time.toString("hh:mm:ss");
+
+
+                    QString path = QDir::homePath();
+                    inputTest.m_fileName = srals.at(i);
+                    inputTest.m_logData = lists.at(i);
+                    inputTest.m_directory = path;
+                    inputTest.m_testName = srals.at(i);
+                    inputTest.m_readingDateTime = nowDateTime;
+
+                    QModelIndex child1 = model->index(0, 0, index);
+                    model->setData(child1, QVariant(inputTest.m_fileName), Qt::EditRole);
+
+                    QVariant variant = QVariant::fromValue(inputTest);
+                    model->setData(child1, variant);
+
+                    QModelIndex child2 = model->index(0, 1, index);
+                    model->setData(child2, QVariant(nowDate), Qt::EditRole);
+
+                    QModelIndex child3 = model->index(0, 2, index);
+                    model->setData(child3, QVariant(nowTime), Qt::EditRole);
+
+                    inputTest.cleanData();
+
+               //     childs.push_front(child1);
+                }
+                else
+                {
+                     QMessageBox::information(this,"Attention","Сontainer error");
+                }
+            }
+
+            nowDateTime = QDateTime::currentDateTime();
+            Date = nowDateTime.date();
+            Time = nowDateTime.time();
+            nowDate = Date.toString("dd.MM.yy");
+            nowTime = Time.toString("hh:mm:ss");
+
+            logSpace->append("Data collecting finished at... ");
+            logSpace->append(nowDate);
+            logSpace->append(nowTime);
+            logSpace->append("\n");
+            logSpace->append("-----------------------------------------------------");
+
+            workSpace->setExpanded(index, true);
+            resizeColumn();
+            updateActions();
+            workSpace->selectionModel()->clearSelection();
+            workSpace->selectionModel()->reset();
+            // setting data
+
         }
-
-        nowDateTime = QDateTime::currentDateTime();
-        Date = nowDateTime.date();
-        Time = nowDateTime.time();
-        nowDate = Date.toString("dd.MM.yy");
-        nowTime = Time.toString("hh:mm:ss");
-
-        logSpace->append("Data collecting finished at... ");
-        logSpace->append(nowDate);
-        logSpace->append(nowTime);
-        logSpace->append("\n");
-        logSpace->append("-----------------------------------------------------");
-
-        workSpace->setExpanded(index, true);
-        resizeColumn();
-        updateActions();
-        workSpace->selectionModel()->clearSelection();
-        workSpace->selectionModel()->reset();
-        // setting data
-
+        else
+             QMessageBox::information(this,"Attention","Serial port is not connected");
     }
     else
-         QMessageBox::information(this,"Attention","Serial port is not connected");
+        QMessageBox::information(this,"Attention","Test is not selected");
 }
 
 void MainWindow::writeTestDataToItem(Test temptest)
@@ -1468,11 +1505,13 @@ void MainWindow::resizeColumn()
 
 void MainWindow::testWroteDate()
 {
-   logSpace->append(outputTest.m_directory);
-   logSpace->append(outputTest.m_fileName);
-   logSpace->append(outputTest.m_testName);
-   if(!outputTest.m_logData.isEmpty())
-   logSpace->append(outputTest.m_logData.first());
+    logSpace->append(outputTest.m_directory);
+    logSpace->append(outputTest.m_fileName);
+    logSpace->append(outputTest.m_testName);
+    if(!outputTest.m_logData.isEmpty())
+        logSpace->append(outputTest.m_logData.first());
+    logSpace->append(QString::number(outputTest.m_settings.pollingFrequency));
+
 
 }
 

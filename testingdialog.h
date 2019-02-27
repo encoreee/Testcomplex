@@ -13,6 +13,21 @@ class QIntValidator;
 
 QT_END_NAMESPACE
 
+enum class Tests
+{
+           SNR,
+           WarmingUp,
+           Crush
+};
+
+struct TestSettings
+{
+    Tests                     choosenTest;
+    int                       pollingFrequency;
+    int                       numberOfCycles;
+    int                       paramert4;
+};
+
 class TestingDialog : public QDialog
 {
     Q_OBJECT
@@ -23,21 +38,6 @@ void settingsChanged();
 
 public:
 
-    enum class Tests
-    {
-               SNR,
-               WarmingUp,
-               Crush
-    };
-
-    struct TestSettings
-    {
-        Tests                     choosenTest;
-        unsigned int              pollingFrequency;
-        int                       paramert3;
-        int                       paramert4;
-    };
-
     explicit TestingDialog(QWidget *parent = nullptr);
     ~TestingDialog();
 
@@ -47,11 +47,11 @@ public:
     bool cancel();
 
 private:
+
     void fillParameters();
     void updateSettings();
+    void checkCustomPollingFrequency(int idx);
 
-
-private:
     Ui::TestingDialog *m_testui = nullptr;
     TestSettings m_currentTestSettings;
     QIntValidator *m_intTestValidator = nullptr;
